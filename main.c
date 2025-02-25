@@ -1,7 +1,7 @@
+#include "init_sudoku.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 static int size = 0;
 
 /*
@@ -10,56 +10,33 @@ peers - Numbers withing the same unit
 base - the square root of the number of peers in a unit
 */
 
-int init_board(unsigned char *board, const int size);
+/*
+Future improvements
+- Set numbers directly in init_sudoku instead of in another functions
+*/
+
+Sudoku *init_sudoku(uint_fast8_t N);
+void free_sudoku(Sudoku *sudoku);
 
 int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    printf("Usage: <BASE>");
-    return 1;
-  }
-
-  size = atoi(argv[1]);
-  unsigned char *board = malloc((size * size) * sizeof(unsigned char *));
-
-  uint64_t a = 3000;
-  a = handle_number(a);
-  printf("a = %ld\n", a);
-  printf("size = %ld\n", sizeof(a));
-
-  if (init_board(board, size) != 0) {
-    printf("Failed to initialize board\n");
-    return 1;
-  }
-
-  for (int i = 0; i < size; i++) {
-    for (int j = 0; j < size; j++) {
-      printf("%d ", board[i * size + j]);
+    if (argc != 2) {
+        printf("Usage: <BASE>");
+        return 1;
     }
-    printf("\n");
-  }
+    uint_fast64_t base = strtoull(argv[1], NULL, 10);
+    Sudoku *sudoku = init_sudoku(base);
+    printf("len: %hhu\n", sudoku->len);
+    printf("base: %hhu\n", sudoku->base);
 
-  free(board);
-  return 0;
-}
+    int i, j;
+    for (i = 0; i < sudoku->len; i++) {
+        for (j = 0; j < sudoku->len; j++) {
+            printf("%hhu ", sudoku->grid[i][j].value);
+        }
+        printf("\n");
+    }
 
-int init_board(unsigned char *board, const int size) {
-  char filename[50]; // Adjust size as necessary
+    free_sudoku(sudoku);
 
-  // Create the filename
-  snprintf(filename, sizeof(filename), "boards/board_%dx%d.dat", size, size);
-
-  FILE *file = fopen(filename, "rb");
-  if (!file) {
-    perror("Error opening file");
-    return 1;
-  }
-
-  int num;
-  int i = 0;
-  while (fread(&num, sizeof(unsigned char), 1, file) == 1) {
-    board[i] = num;
-    i++;
-  }
-  fclose(file);
-  return 0;
+    return 0;
 }

@@ -1,9 +1,10 @@
+BOARD_BASE = 8
 
-BOARD_BASE = 25
-
-main: main.c
-	gcc -o main main.c
-	./main $(BOARD_BASE)
+main: main.c init_sudoku.c
+	gcc -o main main.c init_sudoku.c
 
 clean:
-	rm main
+	rm -f main
+
+run: main
+	./main $(BOARD_BASE)

@@ -6,17 +6,18 @@
 #include <stdlib.h>
 
 typedef struct {
-  uint64_t candidates; // Bit mask of possible numbers (9 bits used)
-  uint8_t value;      // Current value (0 if unset)
+    uint_fast64_t candidates; // Bit mask of possible numbers (9 bits used)
+    uint_fast8_t value;       // Current value (0 if unset)
 } Cell;
 
 typedef struct {
-    uint8_t base; // Size
-    Cell **grid; // The Sudoku grid
+    uint_fast8_t base; // Size
+    uint_fast8_t len; // Size
+    Cell **grid;       // The Sudoku grid
 } Sudoku;
 
 // Function to create a Sudoku board of size N×N
-Sudoku* create_sudoku(uint8_t N);
+Sudoku *init_sudoku(uint_fast8_t N);
 
 // Function to free the allocated Sudoku board
 void free_sudoku(Sudoku *sudoku);

@@ -1,5 +1,0 @@
-{
-    "makefile.configureOnOpen": false,
-    "C_Cpp.formatter": "clangFormat", // or "Default"
-    "C_Cpp.clangFormatStyle": "file"  // Use this if you have a .clang-format file in your project
-}
