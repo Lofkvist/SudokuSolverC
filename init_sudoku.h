@@ -5,19 +5,24 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-typedef struct {
-    uint_fast64_t candidates; // Bit mask of possible numbers (9 bits used)
-    uint_fast8_t value;       // Current value (0 if unset)
+typedef struct Cell{
+    uint_fast64_t candidates;
+    int num_candidates;
+    int value;
+    struct Cell** row_peers;
+    struct Cell** col_peers;
+    struct Cell** box_peers;
 } Cell;
 
 typedef struct {
-    uint_fast8_t base; // Size
-    uint_fast8_t len; // Size
-    Cell **grid;       // The Sudoku grid
+    int base;
+    int len;
+    Cell **grid;
+    int unsolved_count;         // Number of unsolved cells
 } Sudoku;
 
 // Function to create a Sudoku board of size N×N
-Sudoku *init_sudoku(uint_fast8_t N);
+Sudoku *init_sudoku(int N);
 
 // Function to free the allocated Sudoku board
 void free_sudoku(Sudoku *sudoku);
@@ -34,8 +39,4 @@ box_peers
 row_candidates // Candidates present in each row
 col_candidates // Candidates present in each column
 box_candidates // Candidates present in each box
-
-// Statistics for optimization
-candidates_count; // Count of candidates per cell
-unsolved_count;         // Number of unsolved cells
 */

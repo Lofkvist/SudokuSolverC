@@ -13,9 +13,23 @@ base - the square root of the number of peers in a unit
 /*
 Future improvements
 - Set numbers directly in init_sudoku instead of in another functions
+- Parallelize
+- Change to more optimal types (eg uint_fast8_t)
+- Place memory allocations closer together? Both the grid itself and all pointers to peers
+- Improve init_cell_peers? Mutual pointers?
+- Vectorize all for loops
+- Bigger malloc allocations, memory more contigous
 */
 
-Sudoku *init_sudoku(uint_fast8_t N);
+void printBinary(uint_fast64_t num) {
+    // Print the bits from the highest bit (63) to the lowest bit (0)
+    for (int i = 63; i >= 0; i--) {
+        putchar((num & (1ULL << i)) ? '1' : '0');
+    }
+    printf("\n");
+}
+
+Sudoku *init_sudoku(int N);
 void free_sudoku(Sudoku *sudoku);
 
 int main(int argc, char *argv[]) {
@@ -23,18 +37,20 @@ int main(int argc, char *argv[]) {
         printf("Usage: <BASE>");
         return 1;
     }
-    uint_fast64_t base = strtoull(argv[1], NULL, 10);
+    int base = strtoull(argv[1], NULL, 10);
     Sudoku *sudoku = init_sudoku(base);
+    int len = sudoku->len;
     printf("len: %hhu\n", sudoku->len);
     printf("base: %hhu\n", sudoku->base);
 
-    int i, j;
-    for (i = 0; i < sudoku->len; i++) {
-        for (j = 0; j < sudoku->len; j++) {
-            printf("%hhu ", sudoku->grid[i][j].value);
+    for (int j = 0; j < sudoku->len; j++) {
+        printf("Row %d, Col 0 (value %d) column peers: ", j, sudoku->grid[j][0].value);
+        for (int i = 0; i < sudoku->len - 1; i++) {
+            printf("%d ", (sudoku->grid[j][0].col_peers[i])->value);
         }
         printf("\n");
     }
+    
 
     free_sudoku(sudoku);
 

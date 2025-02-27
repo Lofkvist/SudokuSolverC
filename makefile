@@ -1,4 +1,4 @@
-BOARD_BASE = 8
+BOARD_BASE = 5
 
 main: main.c init_sudoku.c
 	gcc -o main main.c init_sudoku.c
