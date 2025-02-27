@@ -47,6 +47,7 @@ void free_sudoku(Sudoku *sudoku) {
             {
                 free(sudoku->grid[i][j].row_peers);
                 free(sudoku->grid[i][j].col_peers);
+                free(sudoku->grid[i][j].box_peers);
             }
         }
     for (j = 0; j < M; j++)
@@ -107,7 +108,7 @@ static void populate_board(Sudoku *sudoku) {
 
 static void init_cell_peers(Sudoku *sudoku) {
     int len = sudoku->len;
-    int base = sudoku->len;
+    int base = sudoku->base;
     Cell **grid = sudoku->grid;
 
     int r, c;
@@ -118,36 +119,44 @@ static void init_cell_peers(Sudoku *sudoku) {
         for (c = 0; c < len; c++) { // Cols
 
             // Row peers
-            //Cell **all_peers = malloc(3 * (len - 1) * sizeof(Cell *));
-
-            row[c].row_peers = malloc((len - 1) * sizeof(Cell *));
-            if (row[c].row_peers == NULL) {
+            Cell **all_peers = malloc(3 * (len - 1) * sizeof(Cell *));
+            if (all_peers == NULL) {
                 printf("Memory allocation failed in init_cell_peers");
                 exit(EXIT_FAILURE);
             }
+
+            row[c].row_peers = all_peers;
+            row[c].col_peers = all_peers + (len - 1);
+            row[c].box_peers = all_peers + 2 * (len - 1);
+
             // THE IF STATEMENT IN THESE LOOPS CAN BE REMOVED
             peer_index = 0; // Index for row_peers
-            for (x = 0; x < len; x++) {
-                if (x != c) { // Skip the current cell
-                    row[c].row_peers[peer_index++] =
-                        &row[x]; // Assign peer cells
-                }
-            }
+            for (x = 0; x < c; x++)
+                row[c].row_peers[peer_index++] = &row[x];
+
+            for (x = c+1; x < len; x++)
+                row[c].row_peers[peer_index++] = &row[x];
 
             // Col peers
-            row[c].col_peers = malloc((len - 1) * sizeof(Cell *));
-            if (row[c].col_peers == NULL) {
-                printf("Memory allocation failed in init_cell_peers");
-                exit(EXIT_FAILURE);
-            }
             peer_index = 0;             // Index for row_peers
-            for (y = 0; y < len; y++) { // Loop rows
-                if (y != r) {           // Skip the current cell
-                    row[c].col_peers[peer_index++] = &grid[y][c];
-                }
-            }
+            for (y = 0; y < r; y++)
+                row[c].col_peers[peer_index++] = &grid[y][c];
+            for (y = r+1; y < len; y++)
+                row[c].col_peers[peer_index++] = &grid[y][c];
 
             // Box peers
+            int br = r / base;
+            int bc = c / base;
+            peer_index = 0;
+
+            for (x = br * base; x < (br + 1) * base; x++) {
+                for (y = bc * base; y < (bc + 1) * base; y++) {
+                    if (x == r && y == c) {
+                        continue;
+                    }
+                    row[c].box_peers[peer_index++] = &grid[x][y];
+                }
+            }
         }
     }
 }

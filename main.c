@@ -40,16 +40,31 @@ int main(int argc, char *argv[]) {
     int base = strtoull(argv[1], NULL, 10);
     Sudoku *sudoku = init_sudoku(base);
     int len = sudoku->len;
-    printf("len: %hhu\n", sudoku->len);
-    printf("base: %hhu\n", sudoku->base);
+    Cell** grid = sudoku->grid;
 
-    for (int j = 0; j < sudoku->len; j++) {
-        printf("Row %d, Col 0 (value %d) column peers: ", j, sudoku->grid[j][0].value);
-        for (int i = 0; i < sudoku->len - 1; i++) {
-            printf("%d ", (sudoku->grid[j][0].col_peers[i])->value);
+    int i, j, k;
+
+    for (i = 0; i < base; i++)
+    {
+        for (j = 0; j < base; j++) {
+            printf("%5d ", grid[i][j].value);
         }
         printf("\n");
     }
+    printf("\n");
+
+    for (i = 0; i < base; i++)
+    {
+        for (j = 0; j < base; j++) {
+            printf("Cell [%d][%d] (val: %d): box peers: ", i, j, grid[i][j].value);
+            for (k = 0; k < len-1; k++)
+            {
+                printf("%d ", grid[i][j].box_peers[k]->value);
+            }
+            printf("\n");
+        }
+    }
+    
     
 
     free_sudoku(sudoku);
