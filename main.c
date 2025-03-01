@@ -50,14 +50,7 @@ int main(int argc, char *argv[]) {
     int i, j;
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
-            printBinary(grid[i][j].candidates, len);
-        }
-        printf("\n");
-    }
-
-    for (i = 0; i < len; i++) {
-        for (j = 0; j < len; j++) {
-            printf("%d ", grid[i][j].num_candidates);
+            printf("%d ", grid[i][j].value);
         }
         printf("\n");
     }
@@ -69,7 +62,7 @@ int main(int argc, char *argv[]) {
 
 void printBinary(uint_fast64_t num, int len) {
     // Print the bits from the highest bit (63) to the lowest bit (0)
-    for (int i = len-1; i >= 0; i--) {
+    for (int i = len - 1; i >= 0; i--) {
         putchar((num & (1ULL << i)) ? '1' : '0');
     }
     printf(" ");

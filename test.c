@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 void printBinary(uint_fast64_t num) {
     // Print the bits from the highest bit (63) to the lowest bit (0)
