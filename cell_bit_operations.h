@@ -10,9 +10,14 @@
 int get_bit(uint_fast64_t candidates, int val);
 
 // Sets the bit at the specified position in the value bitmask
-void set_bit(uint_fast64_t *value, int pos, int len);
+void set_bit(uint_fast64_t *value, int pos);
 
 // Clears bit at position pos and updates num_candidates if that bit was 1 beforehand
-void update_candidates(Cell* cell, int pos);
+int clear_candidate_bit(Cell* cell, int pos);
+
+// Opposite of above
+int set_candidate_bit(Cell* cell, int pos);
+
+int find_iths_set_bit(uint_fast64_t num, int i);
 
 #endif // INIT_SUDOKU_H

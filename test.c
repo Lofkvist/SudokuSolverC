@@ -1,5 +1,8 @@
 #include <stdint.h>
 #include <stdio.h>
+#include "cell_bit_operations.h"
+
+int find_iths_set_bit(uint_fast64_t num, int i);
 
 void printBinary(uint_fast64_t num) {
     // Print the bits from the highest bit (63) to the lowest bit (0)
@@ -10,11 +13,19 @@ void printBinary(uint_fast64_t num) {
 }
 
 int main() {
-    uint_fast64_t num = 0xFFFFFFFFFFFFFFFF; // Example: all bits set
+    uint_fast64_t num = 0; // Example: all bits set
     int val = 5;
-    num &= ~(1ULL << (val-1));                   
+    num |= (1ULL << (val-1));
+    val = 15;
+    num |= (1ULL << (val-1));                   
 
-    printf("%lx\n", num); // Print in hexadecimal
     printBinary(num);
+    int i = 1;
+    int pos = find_iths_set_bit(num, i);
+    
+
+    printf("pos: %d\n", pos);
+
+    //find_iths_set_bit();
     return 0;
 }

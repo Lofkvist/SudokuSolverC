@@ -12,7 +12,7 @@ static void delete_from_peers(Cell *cell, int len);
 
 // Cell and bit operations
 int get_bit(uint_fast64_t candidates, int val);
-void update_candidates(Cell* cell, int pos);
+void set_candidate(Cell* cell, int pos);
 
 Sudoku *init_sudoku(int N) {
     Sudoku *sudoku = malloc(sizeof(Sudoku));
@@ -199,8 +199,8 @@ static void delete_from_peers(Cell* cell, int len) {
 
     // Update peers, update 
     for (j = 0; j < len-1; j++) {
-        update_candidates(cell->box_peers[j], value);
-        update_candidates(cell->row_peers[j], value);
-        update_candidates(cell->col_peers[j], value);
+        clear_candidate_bit(cell->box_peers[j], value);
+        clear_candidate_bit(cell->row_peers[j], value);
+        clear_candidate_bit(cell->col_peers[j], value);
     }
 }
