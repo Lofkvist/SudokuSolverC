@@ -1,9 +1,18 @@
 #include "init_sudoku.h"
+#include "cell_bit_operations.h"
+
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static void populate_board(Sudoku *sudoku);
 static void init_cell_peers(Sudoku *sudoku);
+static void init_peer_candidates(Sudoku *sudoku);
+static void delete_from_peers(Cell *cell, int len);
+
+// Cell and bit operations
+int get_bit(uint_fast64_t candidates, int val);
+void update_candidates(Cell* cell, int pos, int len);
 
 Sudoku *init_sudoku(int N) {
     Sudoku *sudoku = malloc(sizeof(Sudoku));
@@ -34,6 +43,7 @@ Sudoku *init_sudoku(int N) {
 
     populate_board(sudoku);
     init_cell_peers(sudoku);
+    init_peer_candidates(sudoku);
 
     return sudoku;
 }
@@ -46,8 +56,6 @@ void free_sudoku(Sudoku *sudoku) {
         for (j = 0; j < M; j++) {
             {
                 free(sudoku->grid[i][j].row_peers);
-                free(sudoku->grid[i][j].col_peers);
-                free(sudoku->grid[i][j].box_peers);
             }
         }
     for (j = 0; j < M; j++)
@@ -57,7 +65,7 @@ void free_sudoku(Sudoku *sudoku) {
 };
 
 static void populate_board(Sudoku *sudoku) {
-    char filename[30];
+    char filename[40];
     int len = sudoku->len;
     Cell **grid = sudoku->grid;
 
@@ -76,13 +84,17 @@ static void populate_board(Sudoku *sudoku) {
     int i = 0, j = 0, k = 0, unsolved_count = 0;
 
     // Ignore first number, that is the base
-    fread(&data, sizeof(data), 1, file);
+    if (!fread(&data, sizeof(data), 1, file)) {
+        exit(EXIT_FAILURE);
+    }
 
     // Set value and candidates field
     for (i = 0; i < len; i++) {
         Cell *row = grid[i];
         for (j = 0; j < len; j++) {
-            fread(&data, sizeof(data), 1, file);
+            if (!fread(&data, sizeof(data), 1, file)) {
+                exit(EXIT_FAILURE);
+            }
             row[j].value = (int)data;
             if (!data) { // No clue in this cell
                 unsolved_count++;
@@ -134,14 +146,14 @@ static void init_cell_peers(Sudoku *sudoku) {
             for (x = 0; x < c; x++)
                 row[c].row_peers[peer_index++] = &row[x];
 
-            for (x = c+1; x < len; x++)
+            for (x = c + 1; x < len; x++)
                 row[c].row_peers[peer_index++] = &row[x];
 
             // Col peers
-            peer_index = 0;             // Index for row_peers
+            peer_index = 0; // Index for row_peers
             for (y = 0; y < r; y++)
                 row[c].col_peers[peer_index++] = &grid[y][c];
-            for (y = r+1; y < len; y++)
+            for (y = r + 1; y < len; y++)
                 row[c].col_peers[peer_index++] = &grid[y][c];
 
             // Box peers
@@ -158,5 +170,51 @@ static void init_cell_peers(Sudoku *sudoku) {
                 }
             }
         }
+    }
+}
+
+/*
+Sudoku *sudoku
+*/
+
+static void init_peer_candidates(Sudoku *sudoku) {
+    int len = sudoku->len;
+    Cell **grid = sudoku->grid;
+
+    int r, c;
+    for (r = 0; r < len; r++) {
+        for (c = 0; c < len; c++) {
+            if (!grid[r][c].value)
+                continue;                        // No hint, peers are unchanged
+            delete_from_peers(&grid[r][c], len); // Remove cell value from peers
+        }
+    }
+}
+
+static void delete_from_peers(Cell* cell, int len) {
+    int value = cell->value;
+    uint_fast64_t check_mask = 1ULL << (value - 1);    // Mask to check if bit is set
+    uint_fast64_t clear_mask = ~check_mask;            // Mask to clear the bit
+    int j;
+
+    // Update peers, update 
+    for (j = 0; j < len-1; j++) {
+        /*
+        update_candidates(cell->box_peers[j], value, len);
+        update_candidates(cell->row_peers[j], value, len);
+        update_candidates(cell->col_peers[j], value, len);
+        */
+
+        cell->box_peers[j]->num_candidates -= get_bit(cell->box_peers[j]->candidates, value);
+        cell->box_peers[j]->candidates &= clear_mask;
+        
+        // Row peers
+        cell->row_peers[j]->num_candidates -= get_bit(cell->row_peers[j]->candidates, value);
+        cell->row_peers[j]->candidates &= clear_mask;
+        
+        // Column peers
+        cell->col_peers[j]->num_candidates -= get_bit(cell->col_peers[j]->candidates, value);
+        cell->col_peers[j]->candidates &= clear_mask;
+
     }
 }

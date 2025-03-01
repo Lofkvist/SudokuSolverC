@@ -1,17 +1,21 @@
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+void printBinary(uint_fast64_t num) {
+    // Print the bits from the highest bit (63) to the lowest bit (0)
+    for (int i = 63; i >= 0; i--) {
+        putchar((num & (1ULL << i)) ? '1' : '0');
+    }
+    printf("\n");
+}
 
 int main() {
-    int x, y;
-    int br = 1;
-    int bc = 1;
-    int base = 5;
-    int inc = 0;
-    for (x = br * base; x < (br + 1) * base; x++) {
-        for (y = bc * base; y < (bc + 1) * base; y++) {
-            printf("%d ", inc);
-            inc++;
-        }
-        printf("\n");
-    }
+    uint_fast64_t num = 0xFFFFFFFFFFFFFFFF; // Example: all bits set
+    int val = 5;
+    num &= ~(1ULL << (val-1));                   
+
+    printf("%lx\n", num); // Print in hexadecimal
+    printBinary(num);
+    return 0;
 }
