@@ -48,17 +48,11 @@ int set_candidate_bit(Cell* cell, int pos) {
 
 // Returns the position of the first (lowest) set bit
 // Returns -1 if no bits are set
-int find_first_set_bit(uint_fast64_t num) {
-    int position = 1; // Start at position 1 (for Sudoku 1-9)
-    
-    while (num > 0) {
-        if (num & 1) {
-            return position; // Found the first set bit
+int find_first_set_bit(int candidates, int len) {
+    for (int bit = 1; bit <= len; bit++) {
+        if (candidates & (1 << (bit - 1))) {
+            return bit; // return number within the valid range (1 - len)
         }
-        position++;
-        num >>= 1; // Shift right to check next bit
     }
-    
-    // If we get here, no bits were set
-    return -1;
+    return -1; // In case no valid candidates are left
 }

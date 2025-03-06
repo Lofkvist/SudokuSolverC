@@ -20,6 +20,6 @@ int clear_candidate_bit(Cell* cell, int pos);
 // Opposite of above
 int set_candidate_bit(Cell* cell, int pos);
 
-int find_first_set_bit(uint_fast64_t num);
+int find_first_set_bit(uint_fast64_t num, int len);
 
 #endif // INIT_SUDOKU_H

@@ -5,8 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-struct timespec ts = {0, 5000000};
-
+struct timespec ts = {0, 500000};
 
 /*
 Future improvements
@@ -25,15 +24,13 @@ pointers to peers
 - Backtracking solver
 */
 
-
 typedef struct coord {
     int r;
     int c;
+    int found;
 } coord_t;
 
 coord_t find_MRV_cell(Sudoku *sudoku);
-
-coord_t first_empty_cell(Sudoku *sudoku);
 
 int is_valid_placement(Sudoku *sudoku, int r, int c, int num);
 
@@ -51,17 +48,22 @@ void printBinary(uint_fast64_t num, int len);
 
 void print_num_candidates(Sudoku *sudoku);
 
+int backtrack(Sudoku *sudoku);
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Usage: <BASE>");
         return 1;
     }
     int base = strtoull(argv[1], NULL, 10);
-
     Sudoku *sudoku = init_sudoku(base);
 
-    print_num_candidates(sudoku);
+    print_sudoku(sudoku);
+    printf("\n");
+    int solved = backtrack(sudoku);
 
+    print_sudoku(sudoku);
+    printf("Solved? %d\n", solved);
 
     free_sudoku(sudoku);
     return 0;
@@ -76,59 +78,59 @@ void printBinary(uint_fast64_t num, int len) {
 }
 
 int backtrack(Sudoku *sudoku) {
-    coord_t pos = find_MRV_cell(sudoku);
-
-    if (pos.c == -1) { // No empty cells, SOLUTION FOUND!
+    coord_t pos = find_MRV_cell(sudoku);  // Using MRV heuristic instead
+    if (pos.found == 0) { // No empty cells found, DONE!
         return 1;
     }
-
-    int i;
+    
     int r = pos.r;
     int c = pos.c;
-
-    for (i = 0; i < sudoku->grid[r][c].num_candidates; i++) {
-        int num = find_first_set_bit(sudoku->grid[r][c].candidates); // WORKS!
-
+    
+    // Save original candidates
+    uint64_t original_candidates = sudoku->grid[r][c].candidates;
+    int original_num_cand = sudoku->grid[r][c].num_candidates;
+    
+    // For each candidate
+    while (sudoku->grid[r][c].num_candidates > 0) {
+        int num = find_first_set_bit(sudoku->grid[r][c].candidates, sudoku->len);
+        if (num == -1) break;
+        
+        // Remove this candidate
+        clear_candidate_bit(&sudoku->grid[r][c], num);
+        
         if (is_valid_placement(sudoku, r, c, num)) {
-            // SET CELL
-            // UPDATE PEER CANDIDATES
-
-            if (backtrack(sudoku)) { // Now with a new number placed
-                return 1;
+            // Set cell and clear all candidates
+            sudoku->grid[r][c].value = num;
+            sudoku->grid[r][c].candidates = 0;  // Clear all candidates
+            sudoku->grid[r][c].num_candidates = 0;  // Set number of candidates to zero
+            sudoku->unsolved_count--;
+            
+            if (backtrack(sudoku)) {
+                return 1; // Found solution
             }
-
-            // SET CELL BACK TO 0
-            // REMOVE THE ATTEMPTED NUMBER FROM THE DOMAIN OF THIS CELL?
-            // RESET CELL PEER CANDIDATES
+            
+            // Undo the placement
+            sudoku->grid[r][c].value = 0;
+            sudoku->unsolved_count++;
+            
+            // When backtracking, restore candidates except the number we just tried
+            sudoku->grid[r][c].candidates = original_candidates;
+            sudoku->grid[r][c].num_candidates = original_num_cand;
+            
+            // Remove the candidate we just tried (and know doesn't work)
+            clear_candidate_bit(&sudoku->grid[r][c], num);
         }
     }
+    
+    // No solution for this branch
     return 0;
-}
-
-coord_t first_empty_cell(Sudoku *sudoku) {
-    coord_t pos;
-    pos.c = 0;
-    pos.r = 0;
-    int len = sudoku->len;
-
-    int r, c;
-
-    for (r = 0; r < len; r++) {
-        for (c = 0; c < len; c++) {
-            if (sudoku->grid[r][c].value == 0) {
-                pos.r = r;
-                pos.c = c;
-                return pos;
-            }
-        }
-    }
-    return pos;
 }
 
 coord_t find_MRV_cell(Sudoku *sudoku) {
     coord_t pos;
     pos.c = -1;
     pos.r = -1;
+    pos.found = 0;
     int len = sudoku->len;
 
     int r, c;
@@ -141,6 +143,7 @@ coord_t find_MRV_cell(Sudoku *sudoku) {
                 pos.c = c;
                 pos.r = r;
                 min_candidates = sudoku->grid[r][c].num_candidates;
+                pos.found = 1; // Found one!
             }
         }
     }
