@@ -5,10 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void populate_board(Sudoku *sudoku);
-void init_cell_peers(Sudoku *sudoku);
-void init_peer_candidates(Sudoku *sudoku);
-void delete_from_peers(Cell *cell, int len);
+static void populate_board(Sudoku *sudoku);
+static void init_cell_peers(Sudoku *sudoku);
+static void init_peer_candidates(Sudoku *sudoku);
+static void delete_from_peers(Cell *cell, int len);
 
 Sudoku *init_sudoku(int N) {
     Sudoku *sudoku = malloc(sizeof(Sudoku));
@@ -60,7 +60,7 @@ void free_sudoku(Sudoku *sudoku) {
     free(sudoku);
 };
 
-void populate_board(Sudoku *sudoku) {
+static void populate_board(Sudoku *sudoku) {
     char filename[40];
     int len = sudoku->len;
     Cell **grid = sudoku->grid;
@@ -114,7 +114,7 @@ void populate_board(Sudoku *sudoku) {
     fclose(file);
 }
 
-void init_cell_peers(Sudoku *sudoku) {
+static void init_cell_peers(Sudoku *sudoku) {
     int len = sudoku->len;
     int base = sudoku->base;
     Cell **grid = sudoku->grid;
@@ -173,7 +173,7 @@ void init_cell_peers(Sudoku *sudoku) {
 Sudoku *sudoku
 */
 
-void init_peer_candidates(Sudoku *sudoku) {
+static void init_peer_candidates(Sudoku *sudoku) {
     int len = sudoku->len;
     Cell **grid = sudoku->grid;
 
@@ -187,7 +187,7 @@ void init_peer_candidates(Sudoku *sudoku) {
     }
 }
 
-void delete_from_peers(Cell* cell, int len) {
+static void delete_from_peers(Cell* cell, int len) {
     int value = cell->value;
     int j;
 

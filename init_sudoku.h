@@ -27,14 +27,6 @@ Sudoku *init_sudoku(int N);
 // Function to free the allocated Sudoku board
 void free_sudoku(Sudoku *sudoku);
 
-void delete_from_peers(Cell* cell, int len);
-
-void init_peer_candidates(Sudoku *sudoku);
-
-void init_cell_peers(Sudoku *sudoku);
-
-void populate_board(Sudoku *sudoku);
-
 #endif // SUDOKU_H
 
 /*

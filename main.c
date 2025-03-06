@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 struct timespec ts = {0, 5000000};
-void print_candidates(Sudoku *sudoku);
-void printBinary(uint_fast64_t num, int len);
+
+
 /*
 Future improvements
 - Set numbers directly in init_sudoku instead of in another functions
@@ -31,16 +31,25 @@ typedef struct coord {
     int c;
 } coord_t;
 
+coord_t find_MRV_cell(Sudoku *sudoku);
+
+coord_t first_empty_cell(Sudoku *sudoku);
+
+int is_valid_placement(Sudoku *sudoku, int r, int c, int num);
+
 void print_sudoku(Sudoku *sudoku);
 
-coord_t find_empty_cell(Sudoku *sudoku);
-int is_valid_placement(Sudoku *sudoku, int r, int c, int num);
-coord_t first_empty_cell(Sudoku *sudoku);
 int is_valid_board(Sudoku *sudoku);
 
 void update_peer_candidates(Sudoku *sudoku, int num, int r, int c);
 
 int verify_unsolved_count(Sudoku *sudoku);
+
+void print_candidates(Sudoku *sudoku);
+
+void printBinary(uint_fast64_t num, int len);
+
+void print_num_candidates(Sudoku *sudoku);
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -50,6 +59,8 @@ int main(int argc, char *argv[]) {
     int base = strtoull(argv[1], NULL, 10);
 
     Sudoku *sudoku = init_sudoku(base);
+
+    print_num_candidates(sudoku);
 
 
     free_sudoku(sudoku);
@@ -65,7 +76,7 @@ void printBinary(uint_fast64_t num, int len) {
 }
 
 int backtrack(Sudoku *sudoku) {
-    coord_t pos = find_empty_cell(sudoku);
+    coord_t pos = find_MRV_cell(sudoku);
 
     if (pos.c == -1) { // No empty cells, SOLUTION FOUND!
         return 1;
@@ -114,7 +125,7 @@ coord_t first_empty_cell(Sudoku *sudoku) {
     return pos;
 }
 
-coord_t find_empty_cell(Sudoku *sudoku) {
+coord_t find_MRV_cell(Sudoku *sudoku) {
     coord_t pos;
     pos.c = -1;
     pos.r = -1;
@@ -133,9 +144,6 @@ coord_t find_empty_cell(Sudoku *sudoku) {
             }
         }
     }
-
-    printf("Selected empty cell at (%d, %d)\n", pos.r, pos.c); // Debug output
-
     return pos;
 }
 
@@ -173,6 +181,18 @@ void print_candidates(Sudoku *sudoku) {
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
             printBinary(grid[i][j].candidates, len);
+        }
+        printf("\n");
+    }
+}
+
+void print_num_candidates(Sudoku *sudoku) {
+    int len = sudoku->len;
+    Cell **grid = sudoku->grid;
+    int i, j;
+    for (i = 0; i < len; i++) {
+        for (j = 0; j < len; j++) {
+            printf("%2d ", grid[i][j].num_candidates);
         }
         printf("\n");
     }
