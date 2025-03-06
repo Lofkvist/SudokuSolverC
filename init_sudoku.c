@@ -10,10 +10,6 @@ static void init_cell_peers(Sudoku *sudoku);
 static void init_peer_candidates(Sudoku *sudoku);
 static void delete_from_peers(Cell *cell, int len);
 
-// Cell and bit operations
-int get_bit(uint_fast64_t candidates, int val);
-void set_candidate(Cell* cell, int pos);
-
 Sudoku *init_sudoku(int N) {
     Sudoku *sudoku = malloc(sizeof(Sudoku));
     if (!sudoku)
@@ -81,7 +77,7 @@ static void populate_board(Sudoku *sudoku) {
     unsigned char data;
 
     // Read until the end of the file
-    int i = 0, j = 0, k = 0, unsolved_count = 0;
+    int i = 0, j = 0, unsolved_count = 0;
 
     // Ignore first number, that is the base
     if (!fread(&data, sizeof(data), 1, file)) {
@@ -124,7 +120,7 @@ static void init_cell_peers(Sudoku *sudoku) {
     Cell **grid = sudoku->grid;
 
     int r, c;
-    int x, y, z;
+    int x, y;
     int peer_index;
     for (r = 0; r < len; r++) { // Rows
         Cell *row = grid[r];
@@ -193,8 +189,6 @@ static void init_peer_candidates(Sudoku *sudoku) {
 
 static void delete_from_peers(Cell* cell, int len) {
     int value = cell->value;
-    uint_fast64_t check_mask = 1ULL << (value - 1);    // Mask to check if bit is set
-    uint_fast64_t clear_mask = ~check_mask;            // Mask to clear the bit
     int j;
 
     // Update peers, update 
