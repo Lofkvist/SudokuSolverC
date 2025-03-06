@@ -5,14 +5,18 @@ int get_bit(uint_fast64_t candidates, int val) {
     return (candidates >> (val - 1)) & 1;
 }
 
+void clear_bit(uint_fast64_t *candidates, int val) {
+    *candidates &= ~(1ULL << (val - 1));
+}
+
 void set_bit(uint_fast64_t *value, int pos) {
     *value |= (1ULL << (pos - 1));
 }
 
 // This function removes a candidate and returns 1 if modified, 0 if not
 int clear_candidate_bit(Cell *cell, int pos) {
-    int was_set =
-        get_bit(cell->candidates, pos); // Check if the bit was set beforehand
+    // Check if the bit was set beforehand
+    int was_set = get_bit(cell->candidates, pos);
 
     if (was_set) {
         // Update num_candidates
@@ -30,9 +34,9 @@ int clear_candidate_bit(Cell *cell, int pos) {
 int set_candidate_bit(Cell* cell, int pos) {
     int was_cleared = !get_bit(cell->candidates, pos); // Check if the bit was cleared beforehand
 
+    cell->candidates |= (1ULL << (pos - 1));
     if (was_cleared) {
         // Set the bit
-        cell->candidates |= (1ULL << (pos - 1));
         // Increment num_candidates
         cell->num_candidates += 1;
         return 1; // Return 1 to indicate the bit was modified
@@ -42,27 +46,19 @@ int set_candidate_bit(Cell* cell, int pos) {
 }
 
 
-// Returns the position of the i-th set bit (0-indexed)
-// Returns -1 if there are fewer than i+1 set bits
-int find_iths_set_bit(uint_fast64_t num, int i) {
-    int count = 0;    // Count of set bits found so far
-    int position = 0; // Current bit position
-
-    // Iterate through each bit
+// Returns the position of the first (lowest) set bit
+// Returns -1 if no bits are set
+int find_first_set_bit(uint_fast64_t num) {
+    int position = 1; // Start at position 1 (for Sudoku 1-9)
+    
     while (num > 0) {
-        // Check if current bit is set
         if (num & 1) {
-            // If this is the i-th set bit, return its position
-            if (count == i) {
-                return position + 1;
-            }
-            count++;
+            return position; // Found the first set bit
         }
-
         position++;
         num >>= 1; // Shift right to check next bit
     }
-
-    // If we get here, there weren't enough set bits
+    
+    // If we get here, no bits were set
     return -1;
 }

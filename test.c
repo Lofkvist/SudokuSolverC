@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include "cell_bit_operations.h"
 
-int find_iths_set_bit(uint_fast64_t num, int i);
-
 void printBinary(uint_fast64_t num) {
     // Print the bits from the highest bit (63) to the lowest bit (0)
     for (int i = 63; i >= 0; i--) {
@@ -22,6 +20,7 @@ int main() {
     printBinary(num);
     int i = 1;
     int pos = find_iths_set_bit(num, i);
+    
     
 
     printf("pos: %d\n", pos);

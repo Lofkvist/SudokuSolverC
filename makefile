@@ -1,10 +1,24 @@
-BOARD_BASE = 5 # 3, 5, 6, 8
+# Configuration
+BOARD_BASE := 3  # Options: 3, 4, 5, 6, 7, 8
+CC := gcc
+CFLAGS := -O3 -g -Wall
+TARGET := main
+SRC_FILES := main.c init_sudoku.c cell_bit_operations.c
 
-main: main.c init_sudoku.c cell_bit_operations.c
-	gcc -O3 -g -o main main.c init_sudoku.c cell_bit_operations.c
+# Default target
+all: $(TARGET)
 
+# Compile the main program
+$(TARGET): $(SRC_FILES)
+	$(CC) $(CFLAGS) -o $@ $^
+
+# Run the program with configured board base
+run: $(TARGET)
+	./$(TARGET) $(BOARD_BASE)
+
+# Clean build artifacts
 clean:
-	rm -f main
+	rm -f $(TARGET)
 
-run: main
-	./main $(BOARD_BASE)
+# Phony targets
+.PHONY: all run clean
