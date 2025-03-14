@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-struct timespec ts = {0, 500000};
+struct timespec ts = {0, 500000000};
 
 /*
 Future improvements
@@ -41,9 +41,7 @@ int is_valid_board(Sudoku *sudoku);
 
 int backtrack(Sudoku *sudoku);
 
-int claude(Sudoku *sudoku);
-
-int claude2(Sudoku *sudoku);
+void remove_peer_candidates(Cell *cell, int len);
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
@@ -53,73 +51,15 @@ int main(int argc, char *argv[]) {
     int base = strtoull(argv[1], NULL, 10);
     Sudoku *sudoku = init_sudoku(base);
 
+    printf("Before: \n");
     print_sudoku(sudoku);
     printf("\n");
-    int solved = claude(sudoku);
-
+    int solved = backtrack(sudoku);
+    printf("After: \n");
     print_sudoku(sudoku);
-    printf("Solved? %d\n", solved);
+    printf("Was it solved? %d\n", solved);
 
     free_sudoku(sudoku);
-    return 0;
-}
-int backtrack(Sudoku *sudoku) {
-    coord_t pos = find_MRV_cell(sudoku); // Using MRV heuristic instead
-    if (pos.found == 0) {                // No empty cells found, DONE!
-        return 1;
-    }
-
-    int r = pos.r;
-    int c = pos.c;
-
-    // Save original candidates
-    uint_fast64_t original_candidates = sudoku->grid[r][c].candidates;
-    int original_num_cand = sudoku->grid[r][c].num_candidates;
-
-    // For each candidate
-    while (sudoku->grid[r][c].num_candidates > 0) {
-        int num =
-            find_first_set_bit(sudoku->grid[r][c].candidates, sudoku->len);
-        if (num == -1)
-            break;
-
-        if (is_valid_placement(sudoku, r, c, num)) {
-            // Set cell and clear all candidates
-            sudoku->grid[r][c].value = num;
-            sudoku->grid[r][c].candidates = 0;     // Clear candidates
-            sudoku->grid[r][c].num_candidates = 0; // No more candidates
-            sudoku->unsolved_count--;
-
-            system("clear");
-            nanosleep(&ts, NULL);
-            print_sudoku(sudoku);
-            int total = 0;
-            for (int a = 0; a < sudoku->len; a++) {
-                for (int b = 0; b < sudoku->len; b++) {
-                    total += sudoku->grid[a][b].num_candidates;
-                }
-            }
-            printf("Total: %d\n", total);
-
-            if (backtrack(sudoku)) {
-                return 1; // Found solution
-            }
-
-            // Undo the placement
-            sudoku->grid[r][c].value = 0;
-            sudoku->unsolved_count++;
-
-            // When backtracking, restore candidates except the number we just
-            // tried
-            sudoku->grid[r][c].candidates = original_candidates;
-            sudoku->grid[r][c].num_candidates = original_num_cand;
-
-            // Remove the candidate we just tried (and know doesn't work)
-            clear_candidate_bit(&sudoku->grid[r][c], num);
-        }
-    }
-
-    // No solution for this branch
     return 0;
 }
 
@@ -133,46 +73,10 @@ int count_set_bits(uint64_t n, int len) {
     return count;
 }
 
-int claude2(Sudoku *sudoku) {
+int backtrack(Sudoku *sudoku) {
+    // 
     coord_t pos = first_empty_cell(sudoku);
-    if (pos.found == 0) { // No empty cells found, DONE!
-        printf("Klar!\n");
-        return 1;
-    }
-
-    int r = pos.r;
-    int c = pos.c;
-    uint_fast64_t candidates = sudoku->grid[r][c].candidates;
-    uint_fast64_t num_candidates = sudoku->grid[r][c].num_candidates;
-    int i;
-    // Iterate through candidates using bitwise operations
-    for (i = 0; i < num_candidates; i++) {
-        int num = find_first_set_bit(
-            candidates,
-            sudoku->len); // Extract the lowest set bit (1-based index)
-
-        if (is_valid_placement(sudoku, r, c, num)) {
-            // Set cell
-            clear_candidate_bit(&sudoku->grid[r][c], num);
-            sudoku->grid[r][c].value = num;
-            nanosleep(&ts, NULL);
-            print_sudoku(sudoku);
-
-            // Try to solve the rest of the board
-            if (claude2(sudoku)) {
-                return 1; // Found solution
-            }
-
-            // Undo the placement
-            sudoku->grid[r][c].value = 0;
-        }
-    }
-
-    return 0; // No solution found
-}
-
-int claude(Sudoku *sudoku) {
-    coord_t pos = first_empty_cell(sudoku);
+    // coord_t pos = find_MRV_cell(sudoku);
 
     if (pos.found == 0) { // No empty cells found, DONE!
         printf("Klar!\n");
@@ -189,9 +93,32 @@ int claude(Sudoku *sudoku) {
     // Create a temporary copy of candidates to iterate through
     uint_fast64_t temp_candidates = original_candidates;
 
+    // Save peer candidates (to restore later if needed)
+    uint_fast64_t original_row_peers[sudoku->len - 1];
+    uint_fast64_t original_col_peers[sudoku->len - 1];
+    uint_fast64_t original_box_peers[sudoku->len - 1];
+
+    // Save peer candidates (to restore later if needed)
+    int original_row_num_cand[sudoku->len - 1];
+    int original_col_num_cand[sudoku->len - 1];
+    int original_box_num_cand[sudoku->len - 1];
+
+    for (int i = 0; i < sudoku->len - 1; i++) {
+        original_row_peers[i] = sudoku->grid[r][c].row_peers[i]->candidates;
+        original_col_peers[i] = sudoku->grid[r][c].col_peers[i]->candidates;
+        original_box_peers[i] = sudoku->grid[r][c].box_peers[i]->candidates;
+
+        original_row_num_cand[i] =
+            sudoku->grid[r][c].row_peers[i]->num_candidates;
+        original_col_num_cand[i] =
+            sudoku->grid[r][c].col_peers[i]->num_candidates;
+        original_box_num_cand[i] =
+            sudoku->grid[r][c].box_peers[i]->num_candidates;
+    }
+
     // Try each candidate
     int i;
-    for (i = 0; i < temp_candidates; i++) {
+    for (i = 0; i < original_num_cand; i++) {
         int num = find_first_set_bit(temp_candidates, sudoku->len);
         if (num == -1)
             break;
@@ -199,29 +126,59 @@ int claude(Sudoku *sudoku) {
         // Remove this candidate from our temporary list
         temp_candidates &= ~(1ULL << (num - 1));
 
+        // THIS SHOULD ALWAYS BE TRUE
         if (is_valid_placement(sudoku, r, c, num)) {
-            // Set cell
+            // SET CELL AND SET CANDIDATES = 0
             sudoku->grid[r][c].value = num;
             sudoku->grid[r][c].candidates = 0;
             sudoku->grid[r][c].num_candidates = 0;
             sudoku->unsolved_count--;
 
+            remove_peer_candidates(&sudoku->grid[r][c], sudoku->len);
+            /*
+            int err = system("clear");
+            print_sudoku(sudoku);
+            printf("New number set\n");
+            nanosleep(&ts, NULL);
+            */
+
             // Try to solve the rest of the board
-            if (claude(sudoku)) {
+            if (backtrack(sudoku)) {
                 return 1; // Found solution
             }
-            // That route did not work, go back and try a different number in
-            // this cell
 
             // Undo the placement
             sudoku->grid[r][c].value = 0;
             sudoku->unsolved_count++;
 
             // Mark this candidate as tried in the actual cell's candidates
-            sudoku->grid[r][c].candidates =
-                temp_candidates; // New candidates with the tested one removed
+            sudoku->grid[r][c].candidates = temp_candidates;
             sudoku->grid[r][c].num_candidates =
                 count_set_bits(temp_candidates, sudoku->len);
+
+            // Restore the peer candidates (undo the removal)
+            for (int j = 0; j < sudoku->len - 1; j++) {
+                sudoku->grid[r][c].row_peers[j]->candidates =
+                    original_row_peers[j];
+                sudoku->grid[r][c].col_peers[j]->candidates =
+                    original_col_peers[j];
+                sudoku->grid[r][c].box_peers[j]->candidates =
+                    original_box_peers[j];
+
+                sudoku->grid[r][c].row_peers[j]->num_candidates =
+                    original_row_num_cand[j];
+                sudoku->grid[r][c].col_peers[j]->num_candidates =
+                    original_col_num_cand[j];
+                sudoku->grid[r][c].box_peers[j]->num_candidates =
+                    original_box_num_cand[j];
+            }
+
+            /*
+            int err2 = system("clear");
+            print_sudoku(sudoku);
+            printf("Backtrack!\n");
+            nanosleep(&ts, NULL);
+            */
         }
     }
 
@@ -276,10 +233,6 @@ coord_t find_MRV_cell(Sudoku *sudoku) {
             }
         }
     }
-
-    printf("cell: (%d,%d) \n", pos.r, pos.c);
-    print_sudoku(sudoku);
-
     return pos;
 }
 
@@ -296,4 +249,16 @@ int is_valid_placement(Sudoku *sudoku, int r, int c, int num) {
     }
 
     return 1; // Valid placement
+}
+
+// Take a cell, and removes the number placed in that cell from peer candidates
+void remove_peer_candidates(Cell *cell, int len) {
+    int num = cell->value;
+
+    int i;
+    for (i = 0; i < len - 1; i++) {
+        clear_candidate_bit(cell->box_peers[i], num);
+        clear_candidate_bit(cell->row_peers[i], num);
+        clear_candidate_bit(cell->col_peers[i], num);
+    }
 }
