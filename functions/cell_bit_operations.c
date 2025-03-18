@@ -50,10 +50,10 @@ int set_candidate_bit(Cell* cell, int pos) {
 
 // Returns the index (index starting at 1) of the first bit
 // encountered, starting from 1. Returns -1 of none were found
-int find_first_set_bit(int candidates, int len) {
-    for (int bit = 1; bit <= len; bit++) {
-        if (candidates & (1 << (bit - 1))) {
-            return bit; // return number within the valid range (1 - len)
+int find_first_set_bit(uint_fast64_t candidates, int len) {
+    for (int bit = 0; bit < len; bit++) {
+        if (candidates & (1ULL << bit)) {
+            return bit + 1; // return number within the valid range (1 - len)
         }
     }
     return -1; // In case no valid candidates are left

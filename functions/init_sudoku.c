@@ -79,7 +79,10 @@ static void populate_board(Sudoku *sudoku) {
     // Read until the end of the file
     int i = 0, j = 0, unsolved_count = 0;
 
-    // Ignore first number, that is the base
+    // The first two number are the base and side length, which we already know
+    if (!fread(&data, sizeof(data), 1, file)) {
+        exit(EXIT_FAILURE);
+    }
     if (!fread(&data, sizeof(data), 1, file)) {
         exit(EXIT_FAILURE);
     }
