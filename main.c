@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-struct timespec ts = {0, 500000000};
+struct timespec ts = {0, 50000000};
 
 /*
 Future improvements
@@ -43,6 +43,8 @@ int backtrack(Sudoku *sudoku);
 
 void remove_peer_candidates(Cell *cell, int len);
 
+int total_num_candidates(Sudoku* sudoku);
+
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("Usage: <BASE>");
@@ -75,8 +77,8 @@ int count_set_bits(uint64_t n, int len) {
 
 int backtrack(Sudoku *sudoku) {
     // 
-    coord_t pos = first_empty_cell(sudoku);
-    // coord_t pos = find_MRV_cell(sudoku);
+    coord_t pos = find_MRV_cell(sudoku);
+    //coord_t pos = first_empty_cell(sudoku);
 
     if (pos.found == 0) { // No empty cells found, DONE!
         printf("Klar!\n");
@@ -135,12 +137,6 @@ int backtrack(Sudoku *sudoku) {
             sudoku->unsolved_count--;
 
             remove_peer_candidates(&sudoku->grid[r][c], sudoku->len);
-            /*
-            int err = system("clear");
-            print_sudoku(sudoku);
-            printf("New number set\n");
-            nanosleep(&ts, NULL);
-            */
 
             // Try to solve the rest of the board
             if (backtrack(sudoku)) {
@@ -172,13 +168,6 @@ int backtrack(Sudoku *sudoku) {
                 sudoku->grid[r][c].box_peers[j]->num_candidates =
                     original_box_num_cand[j];
             }
-
-            /*
-            int err2 = system("clear");
-            print_sudoku(sudoku);
-            printf("Backtrack!\n");
-            nanosleep(&ts, NULL);
-            */
         }
     }
 
@@ -261,4 +250,17 @@ void remove_peer_candidates(Cell *cell, int len) {
         clear_candidate_bit(cell->row_peers[i], num);
         clear_candidate_bit(cell->col_peers[i], num);
     }
+}
+
+int total_num_candidates(Sudoku* sudoku) {
+    int total = 0;
+    int len = sudoku->len;
+
+    int i, j;
+    for (i = 0; i < len; i++) {
+        for (j = 0; j < len; j++) {
+            total += sudoku->grid[i][j].num_candidates;
+        }
+    }
+    return total;
 }
