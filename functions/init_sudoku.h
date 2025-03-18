@@ -18,25 +18,26 @@ typedef struct {
     int base;
     int len;
     Cell **grid;
-    int unsolved_count;         // Number of unsolved cells
 } Sudoku;
 
-// Function to create a Sudoku board of size N×N
+/*
+Initialize a board of size NxN
+
+Initial clues are taken from the binary file boards/board_DxD.dat, where D = N*N
+*/
 Sudoku *init_sudoku(int N);
 
-// Function to free the allocated Sudoku board
+/*
+Free all allocated memory
+*/
 void free_sudoku(Sudoku *sudoku);
 
-#endif // SUDOKU_H
-
 /*
-// Pre-computed peer indices for fast access
-row_peers
-col_peers
-box_peers
+Remove the number placed in the cell from all its peers
 
-// Additional useful data for techniques
-row_candidates // Candidates present in each row
-col_candidates // Candidates present in each column
-box_candidates // Candidates present in each box
+If that bit was 1 beforehand => num_candidates is decremented
+If that bit was 0 beforehand => num_candidates is unchanged
 */
+void delete_from_peers(Cell* cell, int len);
+
+#endif // SUDOKU_H

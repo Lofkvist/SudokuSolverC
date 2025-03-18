@@ -8,7 +8,7 @@
 static void populate_board(Sudoku *sudoku);
 static void init_cell_peers(Sudoku *sudoku);
 static void init_peer_candidates(Sudoku *sudoku);
-static void delete_from_peers(Cell *cell, int len);
+void delete_from_peers(Cell *cell, int len);
 
 Sudoku *init_sudoku(int N) {
     Sudoku *sudoku = malloc(sizeof(Sudoku));
@@ -17,24 +17,25 @@ Sudoku *init_sudoku(int N) {
 
     sudoku->base = N;
     sudoku->len = N * N;
-    int M = N * N;
+    int len = N * N;
 
-    sudoku->grid = malloc(M * sizeof(Cell *));
+    sudoku->grid = malloc(len * sizeof(Cell *));
     if (!sudoku->grid) {
         free(sudoku);
         return NULL;
     }
 
-    int j, i;
-    for (i = 0; i < M; i++) {
-        sudoku->grid[i] = calloc(M, sizeof(Cell)); // Initialize all to 0
-        if (!sudoku->grid[i]) {                    // Allocation failed
-            for (j = 0; j < i; j++)
-                free(sudoku->grid[j]);
-            free(sudoku->grid);
-            free(sudoku);
-            return NULL;
-        }
+    int i;
+    Cell* all_cells = calloc(len*len, sizeof(Cell));  // Initialize all to 0
+
+    if (!all_cells) {// Allocation failed
+        free(sudoku->grid);
+        free(sudoku);
+        return NULL;
+    }
+
+    for (i = 0; i < len; i++) {
+        sudoku->grid[i] = all_cells + i * len;
     }
 
     populate_board(sudoku);
@@ -46,16 +47,10 @@ Sudoku *init_sudoku(int N) {
 
 // FREE PEER ARRAYS FOR EACH CELL TOO
 void free_sudoku(Sudoku *sudoku) {
-    int M = sudoku->len;
-    int j, i;
-    for (i = 0; i < M; i++)
-        for (j = 0; j < M; j++) {
-            {
-                free(sudoku->grid[i][j].row_peers);
-            }
-        }
-    for (j = 0; j < M; j++)
-        free(sudoku->grid[j]);
+    // Row peers in cell (0,0) points to all peer memory
+    free(sudoku->grid[0][0].row_peers);
+    // Row 0 points to all cell memory
+    free(sudoku->grid[0]);
     free(sudoku->grid);
     free(sudoku);
 };
@@ -77,7 +72,7 @@ static void populate_board(Sudoku *sudoku) {
     unsigned char data;
 
     // Read until the end of the file
-    int i = 0, j = 0, unsolved_count = 0;
+    int i = 0, j = 0;
 
     // The first two number are the base and side length, which we already know
     if (!fread(&data, sizeof(data), 1, file)) {
@@ -95,8 +90,7 @@ static void populate_board(Sudoku *sudoku) {
                 exit(EXIT_FAILURE);
             }
             row[j].value = (int)data;
-            if (!data) { // No clue in this cell
-                unsolved_count++;
+            if (!data) {                             // No clue in this cell
                 row[j].candidates = UINT_FAST64_MAX; // All options avaliable
                 row[j].num_candidates = len;
             } else {                   // Clue given
@@ -105,7 +99,6 @@ static void populate_board(Sudoku *sudoku) {
             }
         }
     }
-    sudoku->unsolved_count = unsolved_count;
 
     // Check for read errors
     if (ferror(file)) {
@@ -125,20 +118,22 @@ static void init_cell_peers(Sudoku *sudoku) {
     int r, c;
     int x, y;
     int peer_index;
+    int total_peer_count = 3 * (len - 1) * len * len;
+    Cell **all_peers = malloc(total_peer_count * sizeof(Cell *));
+    if (all_peers == NULL) {
+        printf("Memory allocation failed in init_cell_peers");
+        exit(EXIT_FAILURE);
+    }
+
     for (r = 0; r < len; r++) { // Rows
         Cell *row = grid[r];
         for (c = 0; c < len; c++) { // Cols
+            int peer_offset = 3 * (len - 1) * (r * len + c);
 
-            // Row peers
-            Cell **all_peers = malloc(3 * (len - 1) * sizeof(Cell *));
-            if (all_peers == NULL) {
-                printf("Memory allocation failed in init_cell_peers");
-                exit(EXIT_FAILURE);
-            }
-
-            row[c].row_peers = all_peers;
-            row[c].col_peers = all_peers + (len - 1);
-            row[c].box_peers = all_peers + 2 * (len - 1);
+            // Peer memory slots
+            row[c].row_peers = all_peers + peer_offset;
+            row[c].col_peers = all_peers + (len - 1) + peer_offset;
+            row[c].box_peers = all_peers + 2 * (len - 1) + peer_offset;
 
             // THE IF STATEMENT IN THESE LOOPS CAN BE REMOVED
             peer_index = 0; // Index for row_peers
@@ -172,10 +167,6 @@ static void init_cell_peers(Sudoku *sudoku) {
     }
 }
 
-/*
-Sudoku *sudoku
-*/
-
 static void init_peer_candidates(Sudoku *sudoku) {
     int len = sudoku->len;
     Cell **grid = sudoku->grid;
@@ -190,12 +181,12 @@ static void init_peer_candidates(Sudoku *sudoku) {
     }
 }
 
-static void delete_from_peers(Cell* cell, int len) {
+void delete_from_peers(Cell *cell, int len) {
     int value = cell->value;
     int j;
 
-    // Update peers, update 
-    for (j = 0; j < len-1; j++) {
+    // Update peers, update
+    for (j = 0; j < len - 1; j++) {
         clear_candidate_bit(cell->box_peers[j], value);
         clear_candidate_bit(cell->row_peers[j], value);
         clear_candidate_bit(cell->col_peers[j], value);

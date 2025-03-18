@@ -1,5 +1,5 @@
 # Configuration
-BOARD_BASE := 8  # Options: 3, 4, 5, 6, 7, 8
+BOARD_BASE := 8  # Options: 3, 5, 6, 8
 CC := gcc
 CFLAGS := -O3 -g -Wall
 TARGET := main
