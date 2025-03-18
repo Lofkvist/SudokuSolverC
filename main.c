@@ -19,8 +19,6 @@ Future improvements
 pointers to peers
 - Improve init_cell_peers? Mutual pointers?
 - Vectorize all for loops
-- Bigger malloc allocations, memory more contigous
-- grid[i * len + j] instead of grid[i][j]
 */
 
 /*
@@ -84,6 +82,7 @@ int main(int argc, char *argv[]) {
 int backtrack(Sudoku *sudoku) {
     //
     coord_t pos = find_MRV_cell(sudoku);
+    int len = sudoku->len;
 
     if (pos.found == 0) { // No empty cells found, DONE!
         return 1;
@@ -93,8 +92,8 @@ int backtrack(Sudoku *sudoku) {
     int c = pos.c;
 
     // Save original state
-    uint_fast64_t original_candidates = sudoku->grid[r][c].candidates;
-    int original_num_cand = sudoku->grid[r][c].num_candidates;
+    uint_fast64_t original_candidates = sudoku->grid[r * len + c].candidates;
+    int original_num_cand = sudoku->grid[r * len + c].num_candidates;
 
     // Create a temporary copy of candidates to iterate through
     uint_fast64_t remaining_candidates = original_candidates;
@@ -110,16 +109,13 @@ int backtrack(Sudoku *sudoku) {
     int original_box_num_cand[sudoku->len - 1];
 
     for (int i = 0; i < sudoku->len - 1; i++) {
-        original_row_peers[i] = sudoku->grid[r][c].row_peers[i]->candidates;
-        original_col_peers[i] = sudoku->grid[r][c].col_peers[i]->candidates;
-        original_box_peers[i] = sudoku->grid[r][c].box_peers[i]->candidates;
+        original_row_peers[i] = sudoku->grid[r * len + c].row_peers[i]->candidates;
+        original_col_peers[i] = sudoku->grid[r * len + c].col_peers[i]->candidates;
+        original_box_peers[i] = sudoku->grid[r * len + c].box_peers[i]->candidates;
 
-        original_row_num_cand[i] =
-            sudoku->grid[r][c].row_peers[i]->num_candidates;
-        original_col_num_cand[i] =
-            sudoku->grid[r][c].col_peers[i]->num_candidates;
-        original_box_num_cand[i] =
-            sudoku->grid[r][c].box_peers[i]->num_candidates;
+        original_row_num_cand[i] = sudoku->grid[r * len + c].row_peers[i]->num_candidates;
+        original_col_num_cand[i] = sudoku->grid[r * len + c].col_peers[i]->num_candidates;
+        original_box_num_cand[i] = sudoku->grid[r * len + c].box_peers[i]->num_candidates;
     }
 
     // Try each candidate
@@ -131,12 +127,12 @@ int backtrack(Sudoku *sudoku) {
 
         // THIS SHOULD ALWAYS BE TRUE
         if (is_valid_placement(sudoku, r, c, num)) {
-            // SET CELL AND SET CANDIDATES = 0
-            sudoku->grid[r][c].value = num;
-            sudoku->grid[r][c].candidates = 0;
-            sudoku->grid[r][c].num_candidates = 0;
+            // Set cell, remove candidates
+            sudoku->grid[r * len + c].value = num;
+            sudoku->grid[r * len + c].candidates = 0;
+            sudoku->grid[r * len + c].num_candidates = 0;
 
-            delete_from_peers(&sudoku->grid[r][c], sudoku->len);
+            delete_from_peers(&sudoku->grid[r * len + c], sudoku->len);
 
             // Try to solve the rest of the board
             if (backtrack(sudoku)) {
@@ -144,34 +140,34 @@ int backtrack(Sudoku *sudoku) {
             }
 
             // Undo the placement
-            sudoku->grid[r][c].value = 0;
+            sudoku->grid[r * len + c].value = 0;
 
             // Mark this candidate as tried in the actual cell's candidates
-            sudoku->grid[r][c].candidates = original_candidates;
-            sudoku->grid[r][c].num_candidates = original_num_cand;
+            sudoku->grid[r * len + c].candidates = original_candidates;
+            sudoku->grid[r * len + c].num_candidates = original_num_cand;
 
             // Restore the peer candidates
             for (int j = 0; j < sudoku->len - 1; j++) {
-                sudoku->grid[r][c].row_peers[j]->candidates =
+                sudoku->grid[r * len + c].row_peers[j]->candidates =
                     original_row_peers[j];
-                sudoku->grid[r][c].col_peers[j]->candidates =
+                sudoku->grid[r * len + c].col_peers[j]->candidates =
                     original_col_peers[j];
-                sudoku->grid[r][c].box_peers[j]->candidates =
+                sudoku->grid[r * len + c].box_peers[j]->candidates =
                     original_box_peers[j];
 
-                sudoku->grid[r][c].row_peers[j]->num_candidates =
+                sudoku->grid[r * len + c].row_peers[j]->num_candidates =
                     original_row_num_cand[j];
-                sudoku->grid[r][c].col_peers[j]->num_candidates =
+                sudoku->grid[r * len + c].col_peers[j]->num_candidates =
                     original_col_num_cand[j];
-                sudoku->grid[r][c].box_peers[j]->num_candidates =
+                sudoku->grid[r * len + c].box_peers[j]->num_candidates =
                     original_box_num_cand[j];
             }
         }
     }
 
     // Dead end, restore changes
-    sudoku->grid[r][c].candidates = original_candidates;
-    sudoku->grid[r][c].num_candidates = original_num_cand;
+    sudoku->grid[r * len + c].candidates = original_candidates;
+    sudoku->grid[r * len + c].num_candidates = original_num_cand;
     return 0;
 }
 
@@ -185,7 +181,7 @@ coord_t first_empty_cell(Sudoku *sudoku) {
     int r, c;
     for (r = 0; r < len; r++) {
         for (c = 0; c < len; c++) {
-            if (sudoku->grid[r][c].value == 0) {
+            if (sudoku->grid[r * len + c].value == 0) {
                 pos.found = 1;
                 pos.r = r;
                 pos.c = c;
@@ -208,12 +204,12 @@ coord_t find_MRV_cell(Sudoku *sudoku) {
 
     for (r = 0; r < len; r++) {
         for (c = 0; c < len; c++) {
-            if (sudoku->grid[r][c].value != 0)
+            if (sudoku->grid[r * len + c].value != 0)
                 continue;
-            if (sudoku->grid[r][c].num_candidates < min_candidates) {
+            if (sudoku->grid[r * len + c].num_candidates < min_candidates) {
                 pos.c = c;
                 pos.r = r;
-                min_candidates = sudoku->grid[r][c].num_candidates;
+                min_candidates = sudoku->grid[r * len + c].num_candidates;
                 pos.found = 1; // Found one!
             }
         }
@@ -226,9 +222,9 @@ int is_valid_placement(Sudoku *sudoku, int r, int c, int num) {
     int i;
 
     for (i = 0; i < len - 1; i++) {
-        if (num == sudoku->grid[r][c].row_peers[i]->value ||
-            num == sudoku->grid[r][c].col_peers[i]->value ||
-            num == sudoku->grid[r][c].box_peers[i]->value) {
+        if (num == sudoku->grid[r * len + c].row_peers[i]->value ||
+            num == sudoku->grid[r * len + c].col_peers[i]->value ||
+            num == sudoku->grid[r * len + c].box_peers[i]->value) {
             return 0; // Invalid placement
         }
     }
@@ -243,18 +239,19 @@ int total_num_candidates(Sudoku *sudoku) {
     int i, j;
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
-            total += sudoku->grid[i][j].num_candidates;
+            total += sudoku->grid[i * len + j].num_candidates;
         }
     }
     return total;
 }
 
 int fully_solved_board(Sudoku *sudoku) {
-    int i, j;
-    for (i = 0; i < sudoku->len; i++) {
-        for (j = 0; j < sudoku->len; j++) {
-            int val = sudoku->grid[i][j].value;
-            if (val == 0 || !is_valid_placement(sudoku, i, j, val)) {
+    int len = sudoku->len;
+    int r, c;
+    for (r = 0; r < sudoku->len; r++) {
+        for (c = 0; c < sudoku->len; c++) {
+            int val = sudoku->grid[r * len + c].value;
+            if (val == 0 || !is_valid_placement(sudoku, r, r, val)) {
                 return 0; // Either unfilled or invalid cell
             }
         }

@@ -17,7 +17,7 @@ typedef struct Cell{
 typedef struct {
     int base;
     int len;
-    Cell **grid;
+    Cell *grid;
 } Sudoku;
 
 /*

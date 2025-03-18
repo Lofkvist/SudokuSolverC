@@ -19,23 +19,10 @@ Sudoku *init_sudoku(int N) {
     sudoku->len = N * N;
     int len = N * N;
 
-    sudoku->grid = malloc(len * sizeof(Cell *));
+    sudoku->grid = malloc(len * len * sizeof(Cell));
     if (!sudoku->grid) {
         free(sudoku);
         return NULL;
-    }
-
-    int i;
-    Cell* all_cells = calloc(len*len, sizeof(Cell));  // Initialize all to 0
-
-    if (!all_cells) {// Allocation failed
-        free(sudoku->grid);
-        free(sudoku);
-        return NULL;
-    }
-
-    for (i = 0; i < len; i++) {
-        sudoku->grid[i] = all_cells + i * len;
     }
 
     populate_board(sudoku);
@@ -48,9 +35,8 @@ Sudoku *init_sudoku(int N) {
 // FREE PEER ARRAYS FOR EACH CELL TOO
 void free_sudoku(Sudoku *sudoku) {
     // Row peers in cell (0,0) points to all peer memory
-    free(sudoku->grid[0][0].row_peers);
+    free(sudoku->grid[0].row_peers);
     // Row 0 points to all cell memory
-    free(sudoku->grid[0]);
     free(sudoku->grid);
     free(sudoku);
 };
@@ -58,7 +44,7 @@ void free_sudoku(Sudoku *sudoku) {
 static void populate_board(Sudoku *sudoku) {
     char filename[40];
     int len = sudoku->len;
-    Cell **grid = sudoku->grid;
+    Cell* grid = sudoku->grid;
 
     // Assuming placed in ./boards directory
     snprintf(filename, sizeof(filename), "boards/board_%dx%d.dat", len, len);
@@ -68,52 +54,37 @@ static void populate_board(Sudoku *sudoku) {
         exit(EXIT_FAILURE);
     }
 
+    // Skip first two bytes (already known)
+    fseek(file, 2, SEEK_SET);
+
     // Read data from the binary file
-    unsigned char data;
-
-    // Read until the end of the file
-    int i = 0, j = 0;
-
-    // The first two number are the base and side length, which we already know
-    if (!fread(&data, sizeof(data), 1, file)) {
-        exit(EXIT_FAILURE);
-    }
-    if (!fread(&data, sizeof(data), 1, file)) {
+    unsigned char *data = malloc(len * len);  // Buffer for faster reading
+    if (!data) {
+        fclose(file);
         exit(EXIT_FAILURE);
     }
 
-    // Set value and candidates field
-    for (i = 0; i < len; i++) {
-        Cell *row = grid[i];
-        for (j = 0; j < len; j++) {
-            if (!fread(&data, sizeof(data), 1, file)) {
-                exit(EXIT_FAILURE);
-            }
-            row[j].value = (int)data;
-            if (!data) {                             // No clue in this cell
-                row[j].candidates = UINT_FAST64_MAX; // All options avaliable
-                row[j].num_candidates = len;
-            } else {                   // Clue given
-                row[j].candidates = 0; // No other candidates for this cell
-                row[j].num_candidates = 0;
-            }
-        }
-    }
-
-    // Check for read errors
-    if (ferror(file)) {
+    if (fread(data, 1, len * len, file) != (size_t)(len * len)) {
         perror("Error reading file");
         exit(EXIT_FAILURE);
     }
+    fclose(file);
+
+    // Vectorized loop
+    for (int i = 0; i < len * len; i++) {
+        grid[i].value = (int)data[i];
+        grid[i].candidates = (data[i] == 0) ? UINT_FAST64_MAX : 0;
+        grid[i].num_candidates = (data[i] == 0) ? len : 0;
+    }
+
 
     // Close the file
-    fclose(file);
+    free(data);
 }
 
 static void init_cell_peers(Sudoku *sudoku) {
     int len = sudoku->len;
     int base = sudoku->base;
-    Cell **grid = sudoku->grid;
 
     int r, c;
     int x, y;
@@ -126,29 +97,28 @@ static void init_cell_peers(Sudoku *sudoku) {
     }
 
     for (r = 0; r < len; r++) { // Rows
-        Cell *row = grid[r];
         for (c = 0; c < len; c++) { // Cols
             int peer_offset = 3 * (len - 1) * (r * len + c);
 
             // Peer memory slots
-            row[c].row_peers = all_peers + peer_offset;
-            row[c].col_peers = all_peers + (len - 1) + peer_offset;
-            row[c].box_peers = all_peers + 2 * (len - 1) + peer_offset;
+            sudoku->grid[r*len + c].row_peers = all_peers + peer_offset;
+            sudoku->grid[r*len + c].col_peers = all_peers + (len - 1) + peer_offset;
+            sudoku->grid[r*len + c].box_peers = all_peers + 2 * (len - 1) + peer_offset;
 
             // THE IF STATEMENT IN THESE LOOPS CAN BE REMOVED
             peer_index = 0; // Index for row_peers
             for (x = 0; x < c; x++)
-                row[c].row_peers[peer_index++] = &row[x];
+                sudoku->grid[r*len + c].row_peers[peer_index++] = &sudoku->grid[r*len + c];
 
             for (x = c + 1; x < len; x++)
-                row[c].row_peers[peer_index++] = &row[x];
+                sudoku->grid[r*len + c].row_peers[peer_index++] = &sudoku->grid[r*len + c];
 
             // Col peers
             peer_index = 0; // Index for row_peers
             for (y = 0; y < r; y++)
-                row[c].col_peers[peer_index++] = &grid[y][c];
+                sudoku->grid[r*len + c].col_peers[peer_index++] = &sudoku->grid[y*len + c];
             for (y = r + 1; y < len; y++)
-                row[c].col_peers[peer_index++] = &grid[y][c];
+                sudoku->grid[r*len + c].col_peers[peer_index++] = &sudoku->grid[y*len + c];
 
             // Box peers
             int br = r / base;
@@ -160,7 +130,7 @@ static void init_cell_peers(Sudoku *sudoku) {
                     if (x == r && y == c) {
                         continue;
                     }
-                    row[c].box_peers[peer_index++] = &grid[x][y];
+                    sudoku->grid[r*len + c].box_peers[peer_index++] = &sudoku->grid[y*len + c];
                 }
             }
         }
@@ -169,14 +139,13 @@ static void init_cell_peers(Sudoku *sudoku) {
 
 static void init_peer_candidates(Sudoku *sudoku) {
     int len = sudoku->len;
-    Cell **grid = sudoku->grid;
 
     int r, c;
     for (r = 0; r < len; r++) {
         for (c = 0; c < len; c++) {
-            if (!grid[r][c].value)
+            if (!sudoku->grid[r*len + c].value)
                 continue;                        // No hint, peers are unchanged
-            delete_from_peers(&grid[r][c], len); // Remove cell value from peers
+            delete_from_peers(&sudoku->grid[r*len + c], len); // Remove cell value from peers
         }
     }
 }

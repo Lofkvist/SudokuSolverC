@@ -11,11 +11,10 @@ void print_binary(uint_fast64_t num, int len) {
 
 void print_sudoku(Sudoku *sudoku) {
     int len = sudoku->len;
-    Cell **grid = sudoku->grid;
     int i, j;
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
-            printf("%2d ", grid[i][j].value);
+            printf("%2d ", sudoku->grid[i * len + j].value);
         }
         printf("\n");
     }
@@ -23,11 +22,10 @@ void print_sudoku(Sudoku *sudoku) {
 
 void print_candidates(Sudoku *sudoku) {
     int len = sudoku->len;
-    Cell **grid = sudoku->grid;
     int i, j;
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
-            print_binary(grid[i][j].candidates, len);
+            print_binary(sudoku->grid[i * len + j].candidates, len);
         }
         printf("\n");
     }
@@ -35,11 +33,10 @@ void print_candidates(Sudoku *sudoku) {
 
 void print_num_candidates(Sudoku *sudoku) {
     int len = sudoku->len;
-    Cell **grid = sudoku->grid;
     int i, j;
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
-            printf("%2d ", grid[i][j].num_candidates);
+            printf("%2d ", sudoku->grid[i * len + j].num_candidates);
         }
         printf("\n");
     }
@@ -51,7 +48,7 @@ void python_print(Sudoku *sudoku) {
     for (int i = 0; i < len; i++) {
         printf("[");
         for (int j = 0; j < len; j++) {
-            printf("%d, ", sudoku->grid[i][j].value);
+            printf("%d, ", sudoku->grid[i * len + j].value);
         }
         printf("],\n");
     }
