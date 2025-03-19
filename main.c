@@ -55,11 +55,12 @@ int main(int argc, char *argv[]) {
     }
     int base = strtoull(argv[1], NULL, 10);
     printf("Side length:          %d\n", base*base);
-
-
+    
+    
     double elapsed_time;
     clock_gettime(CLOCK_MONOTONIC, &start);
     Sudoku *sudoku = init_sudoku(base);
+    print_sudoku(sudoku);
     clock_gettime(CLOCK_MONOTONIC, &end);
     elapsed_time =
     (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
@@ -251,7 +252,7 @@ int fully_solved_board(Sudoku *sudoku) {
     for (r = 0; r < sudoku->len; r++) {
         for (c = 0; c < sudoku->len; c++) {
             int val = sudoku->grid[r * len + c].value;
-            if (val == 0 || !is_valid_placement(sudoku, r, r, val)) {
+            if (val == 0 || !is_valid_placement(sudoku, r, c, val)) {
                 return 0; // Either unfilled or invalid cell
             }
         }

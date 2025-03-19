@@ -105,32 +105,33 @@ static void init_cell_peers(Sudoku *sudoku) {
             sudoku->grid[r*len + c].col_peers = all_peers + (len - 1) + peer_offset;
             sudoku->grid[r*len + c].box_peers = all_peers + 2 * (len - 1) + peer_offset;
 
-            // THE IF STATEMENT IN THESE LOOPS CAN BE REMOVED
-            peer_index = 0; // Index for row_peers
-            for (x = 0; x < c; x++)
-                sudoku->grid[r*len + c].row_peers[peer_index++] = &sudoku->grid[r*len + c];
-
-            for (x = c + 1; x < len; x++)
-                sudoku->grid[r*len + c].row_peers[peer_index++] = &sudoku->grid[r*len + c];
+            // Row peers
+            peer_index = 0;
+            for (x = 0; x < len; x++) {
+                if (x != c) { // Skip the cell itself
+                    sudoku->grid[r*len + c].row_peers[peer_index++] = &sudoku->grid[r*len + x];
+                }
+            }
 
             // Col peers
-            peer_index = 0; // Index for row_peers
-            for (y = 0; y < r; y++)
-                sudoku->grid[r*len + c].col_peers[peer_index++] = &sudoku->grid[y*len + c];
-            for (y = r + 1; y < len; y++)
-                sudoku->grid[r*len + c].col_peers[peer_index++] = &sudoku->grid[y*len + c];
+            peer_index = 0;
+            for (y = 0; y < len; y++) {
+                if (y != r) { // Skip the cell itself
+                    sudoku->grid[r*len + c].col_peers[peer_index++] = &sudoku->grid[y*len + c];
+                }
+            }
 
             // Box peers
-            int br = r / base;
-            int bc = c / base;
+            int box_start_row = (r / base) * base;
+            int box_start_col = (c / base) * base;
             peer_index = 0;
 
-            for (x = br * base; x < (br + 1) * base; x++) {
-                for (y = bc * base; y < (bc + 1) * base; y++) {
-                    if (x == r && y == c) {
-                        continue;
+            for (y = box_start_row; y < box_start_row + base; y++) {
+                for (x = box_start_col; x < box_start_col + base; x++) {
+                    if (y == r && x == c) {
+                        continue; // Skip the cell itself
                     }
-                    sudoku->grid[r*len + c].box_peers[peer_index++] = &sudoku->grid[y*len + c];
+                    sudoku->grid[r*len + c].box_peers[peer_index++] = &sudoku->grid[y*len + x];
                 }
             }
         }
