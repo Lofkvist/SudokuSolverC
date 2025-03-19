@@ -6,8 +6,6 @@
 #include <stdlib.h>
 
 typedef struct Cell{
-    uint_fast64_t candidates;
-    int num_candidates;
     int value;
     struct Cell** row_peers;
     struct Cell** col_peers;

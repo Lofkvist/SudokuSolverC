@@ -20,27 +20,6 @@ void print_sudoku(Sudoku *sudoku) {
     }
 }
 
-void print_candidates(Sudoku *sudoku) {
-    int len = sudoku->len;
-    int i, j;
-    for (i = 0; i < len; i++) {
-        for (j = 0; j < len; j++) {
-            print_binary(sudoku->grid[i * len + j].candidates, len);
-        }
-        printf("\n");
-    }
-}
-
-void print_num_candidates(Sudoku *sudoku) {
-    int len = sudoku->len;
-    int i, j;
-    for (i = 0; i < len; i++) {
-        for (j = 0; j < len; j++) {
-            printf("%2d ", sudoku->grid[i * len + j].num_candidates);
-        }
-        printf("\n");
-    }
-}
 
 void python_print(Sudoku *sudoku) {
     int len = sudoku->len;

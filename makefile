@@ -3,7 +3,7 @@ BOARD_BASE := 5  # Options: 3, 5, 6, 8
 CC := gcc
 CFLAGS := -O3 -g -Wall
 TARGET := main
-SRC_FILES := main.c functions/init_sudoku.c functions/cell_bit_operations.c functions/display_functions.c
+SRC_FILES := main.c functions/init_sudoku.c functions/display_functions.c functions/parallel.c
 
 # Default target
 all: $(TARGET)

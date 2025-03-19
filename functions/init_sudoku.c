@@ -1,5 +1,4 @@
 #include "init_sudoku.h"
-#include "cell_bit_operations.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -7,8 +6,6 @@
 
 static void populate_board(Sudoku *sudoku);
 static void init_cell_peers(Sudoku *sudoku);
-static void init_peer_candidates(Sudoku *sudoku);
-void delete_from_peers(Cell *cell, int len);
 
 Sudoku *init_sudoku(int N) {
     Sudoku *sudoku = malloc(sizeof(Sudoku));
@@ -27,8 +24,6 @@ Sudoku *init_sudoku(int N) {
 
     populate_board(sudoku);
     init_cell_peers(sudoku);
-    init_peer_candidates(sudoku);
-
     return sudoku;
 }
 
@@ -73,8 +68,6 @@ static void populate_board(Sudoku *sudoku) {
     // Vectorized loop
     for (int i = 0; i < len * len; i++) {
         grid[i].value = (int)data[i];
-        grid[i].candidates = (data[i] == 0) ? UINT_FAST64_MAX : 0;
-        grid[i].num_candidates = (data[i] == 0) ? len : 0;
     }
 
 
@@ -135,30 +128,5 @@ static void init_cell_peers(Sudoku *sudoku) {
                 }
             }
         }
-    }
-}
-
-static void init_peer_candidates(Sudoku *sudoku) {
-    int len = sudoku->len;
-
-    int r, c;
-    for (r = 0; r < len; r++) {
-        for (c = 0; c < len; c++) {
-            if (!sudoku->grid[r*len + c].value)
-                continue;                        // No hint, peers are unchanged
-            delete_from_peers(&sudoku->grid[r*len + c], len); // Remove cell value from peers
-        }
-    }
-}
-
-void delete_from_peers(Cell *cell, int len) {
-    int value = cell->value;
-    int j;
-
-    // Update peers, update
-    for (j = 0; j < len - 1; j++) {
-        clear_candidate_bit(cell->box_peers[j], value);
-        clear_candidate_bit(cell->row_peers[j], value);
-        clear_candidate_bit(cell->col_peers[j], value);
     }
 }
