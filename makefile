@@ -1,9 +1,9 @@
 # Configuration
 BOARD_BASE := 5  # Options: 3, 5, 6, 8
 CC := gcc
-CFLAGS := -O3 -g -Wall
+CFLAGS := -O3 -g -Wall -lpthread
 TARGET := main
-SRC_FILES := main.c functions/init_sudoku.c functions/display_functions.c functions/parallel.c
+SRC_FILES := main.c functions/init_sudoku.c functions/display_functions.c functions/parallel.c functions/task_hash.c
 
 # Default target
 all: $(TARGET)

@@ -1,17 +1,40 @@
 #include "parallel.h"
 #include "display_functions.h"
 #include "init_sudoku.h"
+#include <bits/pthreadtypes.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 Sudoku *deep_copy_sudoku(Sudoku *parent);
-Task *create_task(Sudoku *parent, int row, int col);
 
-Task *create_task(Sudoku *parent, int row, int col) {
-    Task *task = malloc(sizeof(Task));
+u_int32_t generate_task_id(Sudoku *sudoku);
 
-    task->sudoku = deep_copy_sudoku(parent);
-    return task;
+// Create a new state by deep copying the current state of the board
+Task *create_task(Sudoku *parent) {
+    Task *new_task = malloc(sizeof(Task));
+
+    new_task->sudoku = deep_copy_sudoku(parent);
+    new_task->task_id = generate_task_id(new_task->sudoku);
+    return new_task;
+}
+
+void free_task(Task *task) {
+    free(task->sudoku);
+    free(task);
+}
+
+// A simple hash function for generating task ID based on Sudoku grid
+u_int32_t generate_task_id(Sudoku *sudoku) {
+    u_int32_t hash = 0;
+    int len = sudoku->len;
+
+    for (int i = 0; i < len * len; i++) {
+        hash = hash * 31 + sudoku->grid[i].value;
+    }
+
+    return hash;
 }
 
 Sudoku *deep_copy_sudoku(Sudoku *parent) {
@@ -53,8 +76,9 @@ Sudoku *deep_copy_sudoku(Sudoku *parent) {
             int idx = r * len + c;
             peer_offset = 3 * (len - 1) * (idx);
 
-            // Copy value, candidates and number of canidates
+            // Copy value
             child->grid[idx].value = parent->grid[idx].value;
+
             // Peer memory slots
             child->grid[idx].row_peers = all_peers + peer_offset;
             child->grid[idx].col_peers = all_peers + (len - 1) + peer_offset;
@@ -99,94 +123,60 @@ Sudoku *deep_copy_sudoku(Sudoku *parent) {
     return child;
 }
 
-
 // Initialize deque
-void deque_init(WorkDeque *deque) {
+void deque_init(WorkDeque *deque, int thread_id, int N_THREADS) {
     deque->top = 0;
     deque->bottom = 0;
+    deque->thread_id = thread_id;
+    deque->N_THREADS = N_THREADS;
+    deque->num_tasks = 0;
+    pthread_mutex_init(&deque->mutex, NULL); // Initialize mutex
 }
 
 // Push task (LIFO, only owner thread calls this)
 void deque_push(WorkDeque *deque, Task *task) {
-    int b = atomic_load(&deque->bottom);
+    pthread_mutex_lock(&deque->mutex); // Lock the mutex
+
+    int b = deque->bottom;
     deque->tasks[b % DEQUE_SIZE] = task;
-    atomic_store(&deque->bottom, b + 1);
+    deque->bottom = b + 1;
+    deque->num_tasks += 1;
+
+    pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
 }
 
-// Pop task (LIFO, only owner thread calls this)
 Task *deque_pop(WorkDeque *deque) {
-    int b = atomic_load(&deque->bottom) - 1;
-    atomic_store(&deque->bottom, b);
-    int t = atomic_load(&deque->top);
+    pthread_mutex_lock(&deque->mutex); // Lock the mutex
 
-    if (t <= b) {  // Still has tasks
-        return deque->tasks[b % DEQUE_SIZE];
-    } else {  // No more tasks
-        atomic_store(&deque->bottom, t);
-        return NULL;
+    int b = deque->bottom - 1; // Remove atomic fetch sub
+    int t = deque->top;
+
+    Task *task = NULL;
+    if (t <= b) {              // Tasks available
+        deque->num_tasks -= 1; // No need for atomic fetch sub
+        task = deque->tasks[b % DEQUE_SIZE];
+        deque->bottom = b; // Restore bottom
     }
+
+    pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
+    return task;
 }
 
-// Steal task (FIFO, called by other threads)
 Task *deque_steal(WorkDeque *deque) {
-    int t = atomic_load(&deque->top);
-    int b = atomic_load(&deque->bottom);
+    pthread_mutex_lock(&deque->mutex); // Lock the mutex
 
+    int t = deque->top; // Remove atomic load
+    int b = deque->bottom;
+
+    Task *task = NULL;
     if (t < b) { // Tasks available
-        Task *task = deque->tasks[t % DEQUE_SIZE];
-        atomic_store(&deque->top, t + 1);
-        return task;
-    } 
-    return NULL; // No tasks to steal
-}
-/*
-void worker_thread(WorkDeque *deque, int thread_id) {
-    while (true) {
-        Task *task = pop_bottom(deque);
-        
-        if (!task) {
-            task = steal_from_other_deques();  // Try to steal a task
-            if (!task) continue;  // If stealing fails, keep trying
-        }
-        
-        if (solve_sudoku(task->sudoku, task->row, task->col)) {
-            // Sudoku solved! Store result somewhere
-        } else {
-            // Create new tasks and push them
-        for (each valid move) {
-            Task *new_task = create_task(task->sudoku, new_row, new_col);
-            push_bottom(deque, new_task);
-        }
-    }
-    
-    free_task(task); // Clean up memory
-}
-}
+        task = deque->tasks[t % DEQUE_SIZE];
 
-void parallel_sudoku_solver(Sudoku *initial_sudoku) {
-    int num_threads = get_num_threads();
-    WorkDeque deques[num_threads];
-    
-    // Initialize deques
-    for (int i = 0; i < num_threads; i++) {
-        init_deque(&deques[i], INIT_CAPACITY);
+        // Try to steal the task (update top)
+        deque->top = t + 1;    // Update top (no atomic CAS)
+        deque->num_tasks -= 1; // Decrement num_tasks
     }
-    
-    // Create initial tasks
-    for (each valid move) {
-        Task *task = create_task(initial_sudoku, row, col);
-        push_bottom(&deques[0], task); // Put them in the first worker's deque
-    }
-    
-    // Launch worker threads
-    for (int i = 0; i < num_threads; i++) {
-        pthread_create(&threads[i], NULL, worker_thread, &deques[i]);
-    }
-    
-    // Join threads
-    for (int i = 0; i < num_threads; i++) {
-        pthread_join(threads[i], NULL);
-    }
-}
 
-*/
+    pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
+    return task;
+}
