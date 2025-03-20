@@ -55,7 +55,7 @@
     "workbench.sideBar.location": "right",
     "[c]": {
         "editor.tabSize": 4,
-        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.defaultFormatter": "chiehyu.vscode-astyle",
         "editor.insertSpaces": true
     },
     "editor.formatOnPaste": false,
