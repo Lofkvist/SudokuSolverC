@@ -10,7 +10,6 @@
 
 typedef struct HashNode {
     u_int32_t task_id;       // Task ID generated from the Sudoku grid
-    Task *task_data;         // Task data (e.g., Sudoku grid or state)
     struct HashNode *next;   // Pointer to next node in case of collision
 } HashNode;
 
@@ -21,9 +20,9 @@ typedef struct HashTable {
 
 // Function declarations
 
-Task *lookup_task_in_hash_table(HashTable* hash_table, Task *task);
-void insert_task_to_hash_table(HashTable* hash_table, Task *task);
+int task_exists_in_hash_table(HashTable* hash_table, u_int32_t task_id);
+void insert_task_to_hash_table(HashTable *hash_table, Task *task);
 void initialize_hash_table(HashTable* hash_table);
-
+void free_hash_table(HashTable* hash_table);
 
 #endif // TASK_HASH_H

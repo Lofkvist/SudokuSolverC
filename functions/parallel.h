@@ -20,6 +20,7 @@ typedef struct Deque {
     int thread_id;
     int N_THREADS;
     int num_tasks;
+    int found_by_thread;
     int top;     // Index for work stealing
     int bottom;         // Local worker index
     pthread_mutex_t mutex;  // Mutex for locking the deque

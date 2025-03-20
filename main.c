@@ -1,8 +1,8 @@
 
 #include "functions/display_functions.h"
 #include "functions/init_sudoku.h"
-#include "functions/task_hash.h"
 #include "functions/parallel.h"
+#include "functions/task_hash.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -36,14 +36,14 @@ pointers to peers
 
 // Shared to enable stealing
 WorkDeque *deques;
-HashTable hash_table; // To know which states have been visited
+HashTable *hash_table; // To know which states have been visited
+Sudoku *solved_sudoku = NULL;  // This will store the solution
 
 typedef struct coord {
     int r;
     int c;
     int found;
 } coord_t;
-
 
 coord_t find_MRV_cell(Sudoku *sudoku);
 
@@ -62,7 +62,7 @@ int total_num_candidates(Sudoku *sudoku);
 int fully_solved_board(Sudoku *sudoku);
 
 void *worker_thread(void *arg);
-void parallel_sudoku_solver(Sudoku *sudoku, int N_THREADS);
+void parallel_sudoku_solver(Sudoku *initial_sudoku, int N_THREADS);
 Task *steal_from_other_deques(int N_THREADS, int thread_id);
 
 int main(int argc, char *argv[]) {
@@ -91,7 +91,8 @@ int main(int argc, char *argv[]) {
         (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
     printf("Solve time:           %.9f seconds\n", elapsed_time);
-    printf("Solved correctly? %5d\n", fully_solved_board(sudoku));
+    print_sudoku(solved_sudoku);
+    printf("Solved correctly? %5d\n", fully_solved_board(solved_sudoku));
 
     free_sudoku(sudoku);
     return 0;
@@ -169,24 +170,53 @@ void parallel_sudoku_solver(Sudoku *initial_sudoku, int N_THREADS) {
     }
 
     free_sudoku(temp_sudoku);
+    hash_table = (HashTable *)malloc(sizeof(HashTable));
+    if (hash_table == NULL) {
+        // Handle memory allocation failure
+        fprintf(stderr, "Failed to allocate memory for hash table\n");
+        exit(1);
+    }
+
+    initialize_hash_table(hash_table);
 
     // Launch worker threads
     for (int i = 0; i < N_THREADS; i++) {
         pthread_create(&threads[i], NULL, worker_thread, &deques[i]);
     }
 
+
     // Join threads
     for (int i = 0; i < N_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
+    for (int i = 0; i < N_THREADS; i++) {
+        if (deques[i].found_by_thread){
+        }
+    }
+    
+    /*
+    int count = 0;
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        HashNode *current = hash_table->table[i];
+        
+        // Traverse the linked list in this bucket
+        while (current != NULL) {
+            printf("  [%d] Task ID: %u\n", count, current->task_id);
+            count++;
+            current = current->next;
+        }
+    }
+    */
 
     for (int i = 0; i < N_THREADS; i++)
-        pthread_mutex_destroy(&(deques[i].mutex)); // Destroy the mutex
+        pthread_mutex_destroy(&(deques[i].mutex)); // Destroy the thread mutexes
     free(deques);
+    free_hash_table(hash_table);
 }
 
 void *worker_thread(void *arg) {
     WorkDeque *deque = (WorkDeque *)arg;
+
     while (true) {
         // Lock the mutex to check the shared solution_found flag
         pthread_mutex_lock(&solution_mutex);
@@ -195,32 +225,46 @@ void *worker_thread(void *arg) {
             break; // Exit the loop if solution is found
         }
         pthread_mutex_unlock(&solution_mutex); // Unlock after checking
+
         // Take a state from own deque
         Task *task = deque_pop(deque);
-
         if (!task) {
             task = steal_from_other_deques(
                 deque->N_THREADS, deque->thread_id); // Try to steal a task
         }
 
-        int solved = solve(task->sudoku);
+        if (task) {
+            // Check if this board state has been explored before
 
-        if (solved) {
-            // Return here and create task for other threads to help once a
-            // certain depth has been reached The thread could get stuck here
-            // for a while if it is a tough branch Puzzle solved, set the global
-            // termination flag
-            pthread_mutex_lock(&solution_mutex);
-            if (!solution_found) {
-                solution_found = true; // Set the global termination flag
-                printf("Solution found by thread %d!\n", deque->thread_id);
+            pthread_mutex_lock(&hash_table->mutex);
+            if (task_exists_in_hash_table(hash_table, task->task_id)) {
+                // This state has been explored before
+                pthread_mutex_unlock(&hash_table->mutex);
+                free_task(task);  // Clean up memory
+                continue;  // Skip this task
             }
-            pthread_mutex_unlock(&solution_mutex);
-            free_task(task);
-            break; // Exit the loop after solving
-        }
+            
+            // If not explored, add to hash table
+            insert_task_to_hash_table(hash_table, task);
+            pthread_mutex_unlock(&hash_table->mutex);
 
-        free_task(task); // Clean up memory
+
+
+            // Now process the task
+            int solved = solve(task->sudoku);
+            if (solved) {
+                pthread_mutex_lock(&solution_mutex);
+                if (!solution_found) {
+                    deque->found_by_thread = 1;
+                    solution_found = true; // Set the global termination flag
+                    solved_sudoku = deep_copy_sudoku(task->sudoku);
+                }
+                pthread_mutex_unlock(&solution_mutex);
+                free_task(task);
+                break; // Exit the loop after solving
+            }
+            free_task(task); // Clean up memory
+        }
     }
     return NULL;
 }

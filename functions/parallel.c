@@ -39,17 +39,16 @@ u_int32_t generate_task_id(Sudoku *sudoku) {
 
 Sudoku *deep_copy_sudoku(Sudoku *parent) {
     Sudoku *child = malloc(sizeof(Sudoku));
-
     if (!child) {
         printf("Sudoku deep copy failed.\n");
         exit(EXIT_FAILURE);
     }
-
+    
     child->base = parent->base;
     child->len = parent->len;
     int len = child->len;
     int base = child->base;
-
+    
     // Grid memory
     child->grid = malloc(len * len * sizeof(Cell));
     if (!child->grid) {
@@ -57,69 +56,69 @@ Sudoku *deep_copy_sudoku(Sudoku *parent) {
         printf("Grid deep copy failed.\n");
         exit(EXIT_FAILURE);
     }
-
+    
     // Peer memory
     int r, c;
     int total_peer_count = 3 * (len - 1) * len * len;
     Cell **all_peers = malloc(total_peer_count * sizeof(Cell *));
-
     if (!all_peers) {
         free(child->grid);
         free(child);
         printf("Peer deep copy failed.\n");
         exit(EXIT_FAILURE);
     }
-
-    int peer_offset, peer_index, x, y;
-    for (r = 0; r < len; r++) {     // Rows
-        for (c = 0; c < len; c++) { // Cols
+    
+    // First, copy all cell values
+    for (r = 0; r < len; r++) {
+        for (c = 0; c < len; c++) {
             int idx = r * len + c;
-            peer_offset = 3 * (len - 1) * (idx);
-
-            // Copy value
             child->grid[idx].value = parent->grid[idx].value;
-
-            // Peer memory slots
+        }
+    }
+    
+    // Then set up all peer relationships
+    int peer_offset;
+    for (r = 0; r < len; r++) {
+        for (c = 0; c < len; c++) {
+            int idx = r * len + c;
+            peer_offset = 3 * (len - 1) * idx;
+            
+            // Assign peer pointers
             child->grid[idx].row_peers = all_peers + peer_offset;
             child->grid[idx].col_peers = all_peers + (len - 1) + peer_offset;
-            child->grid[idx].box_peers =
-                all_peers + 2 * (len - 1) + peer_offset;
-
-            peer_index = 0; // Index for row_peers
-            for (x = 0; x < c; x++)
-                child->grid[r * len + c].row_peers[peer_index++] =
-                    &child->grid[r * len + c];
-
-            for (x = c + 1; x < len; x++)
-                child->grid[r * len + c].row_peers[peer_index++] =
-                    &child->grid[r * len + c];
-
-            // Col peers
-            peer_index = 0; // Index for row_peers
-            for (y = 0; y < r; y++)
-                child->grid[r * len + c].col_peers[peer_index++] =
-                    &child->grid[y * len + c];
-            for (y = r + 1; y < len; y++)
-                child->grid[r * len + c].col_peers[peer_index++] =
-                    &child->grid[y * len + c];
-
-            // Box peers
-            int br = r / base;
-            int bc = c / base;
+            child->grid[idx].box_peers = all_peers + 2 * (len - 1) + peer_offset;
+            
+            // Set row peers
+            int peer_index = 0;
+            for (int x = 0; x < len; x++) {
+                if (x != c) { // Skip self
+                    child->grid[idx].row_peers[peer_index++] = &child->grid[r * len + x];
+                }
+            }
+            
+            // Set column peers
             peer_index = 0;
-
-            for (x = br * base; x < (br + 1) * base; x++) {
-                for (y = bc * base; y < (bc + 1) * base; y++) {
-                    if (x == r && y == c) {
-                        continue;
+            for (int y = 0; y < len; y++) {
+                if (y != r) { // Skip self
+                    child->grid[idx].col_peers[peer_index++] = &child->grid[y * len + c];
+                }
+            }
+            
+            // Set box peers
+            peer_index = 0;
+            int box_row_start = (r / base) * base;
+            int box_col_start = (c / base) * base;
+            
+            for (int box_r = box_row_start; box_r < box_row_start + base; box_r++) {
+                for (int box_c = box_col_start; box_c < box_col_start + base; box_c++) {
+                    if (box_r != r || box_c != c) { // Skip self
+                        child->grid[idx].box_peers[peer_index++] = &child->grid[box_r * len + box_c];
                     }
-                    child->grid[r * len + c].box_peers[peer_index++] =
-                        &child->grid[y * len + c];
                 }
             }
         }
     }
-
+    
     return child;
 }
 
@@ -130,6 +129,7 @@ void deque_init(WorkDeque *deque, int thread_id, int N_THREADS) {
     deque->thread_id = thread_id;
     deque->N_THREADS = N_THREADS;
     deque->num_tasks = 0;
+    deque->found_by_thread = 0;
     pthread_mutex_init(&deque->mutex, NULL); // Initialize mutex
 }
 
