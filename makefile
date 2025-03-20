@@ -1,5 +1,5 @@
 # Configuration
-BOARD_BASE := 5  # Options: 3, 5, 6, 8
+BOARD_BASE := 5  # Options: 5, 6, 8
 CC := gcc
 CFLAGS := -O3 -g -Wall -lpthread
 TARGET := main

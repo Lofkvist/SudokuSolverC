@@ -47,7 +47,6 @@ Sudoku *deep_copy_sudoku(Sudoku *parent) {
     child->base = parent->base;
     child->len = parent->len;
     int len = child->len;
-    int base = child->base;
     
     // Grid memory
     child->grid = malloc(len * len * sizeof(Cell));
@@ -56,18 +55,7 @@ Sudoku *deep_copy_sudoku(Sudoku *parent) {
         printf("Grid deep copy failed.\n");
         exit(EXIT_FAILURE);
     }
-    
-    // Peer memory
-    int r, c;
-    int total_peer_count = 3 * (len - 1) * len * len;
-    Cell **all_peers = malloc(total_peer_count * sizeof(Cell *));
-    if (!all_peers) {
-        free(child->grid);
-        free(child);
-        printf("Peer deep copy failed.\n");
-        exit(EXIT_FAILURE);
-    }
-    
+    int r,c;
     // First, copy all cell values
     for (r = 0; r < len; r++) {
         for (c = 0; c < len; c++) {
@@ -75,50 +63,6 @@ Sudoku *deep_copy_sudoku(Sudoku *parent) {
             child->grid[idx].value = parent->grid[idx].value;
         }
     }
-    
-    // Then set up all peer relationships
-    int peer_offset;
-    for (r = 0; r < len; r++) {
-        for (c = 0; c < len; c++) {
-            int idx = r * len + c;
-            peer_offset = 3 * (len - 1) * idx;
-            
-            // Assign peer pointers
-            child->grid[idx].row_peers = all_peers + peer_offset;
-            child->grid[idx].col_peers = all_peers + (len - 1) + peer_offset;
-            child->grid[idx].box_peers = all_peers + 2 * (len - 1) + peer_offset;
-            
-            // Set row peers
-            int peer_index = 0;
-            for (int x = 0; x < len; x++) {
-                if (x != c) { // Skip self
-                    child->grid[idx].row_peers[peer_index++] = &child->grid[r * len + x];
-                }
-            }
-            
-            // Set column peers
-            peer_index = 0;
-            for (int y = 0; y < len; y++) {
-                if (y != r) { // Skip self
-                    child->grid[idx].col_peers[peer_index++] = &child->grid[y * len + c];
-                }
-            }
-            
-            // Set box peers
-            peer_index = 0;
-            int box_row_start = (r / base) * base;
-            int box_col_start = (c / base) * base;
-            
-            for (int box_r = box_row_start; box_r < box_row_start + base; box_r++) {
-                for (int box_c = box_col_start; box_c < box_col_start + base; box_c++) {
-                    if (box_r != r || box_c != c) { // Skip self
-                        child->grid[idx].box_peers[peer_index++] = &child->grid[box_r * len + box_c];
-                    }
-                }
-            }
-        }
-    }
-    
     return child;
 }
 

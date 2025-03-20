@@ -7,9 +7,6 @@
 
 typedef struct Cell{
     int value;
-    struct Cell** row_peers;
-    struct Cell** col_peers;
-    struct Cell** box_peers;
 } Cell;
 
 typedef struct {
@@ -29,13 +26,5 @@ Sudoku *init_sudoku(int N);
 Free all allocated memory
 */
 void free_sudoku(Sudoku *sudoku);
-
-/*
-Remove the number placed in the cell from all its peers
-
-If that bit was 1 beforehand => num_candidates is decremented
-If that bit was 0 beforehand => num_candidates is unchanged
-*/
-void delete_from_peers(Cell* cell, int len);
 
 #endif // SUDOKU_H

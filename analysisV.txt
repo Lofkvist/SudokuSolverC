@@ -1,0 +1,818 @@
+--------------------------------------------------------------------------------
+Profile data file 'callgrind.out.326180' (creator: callgrind-3.18.1)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 857814
+Trigger: Program termination
+Profiled target:  ./main 5 (PID 326180, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  on
+
+--------------------------------------------------------------------------------
+Ir                 
+--------------------------------------------------------------------------------
+3,156,440 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                  file:function
+--------------------------------------------------------------------------------
+1,945,638 (61.64%)  main.c:is_valid_placement [/home/calo8122/HPP/SudokuSolverC/main]
+  685,258 (21.71%)  main.c:solve.part.0'2 [/home/calo8122/HPP/SudokuSolverC/main]
+  129,973 ( 4.12%)  functions/parallel.c:create_task [/home/calo8122/HPP/SudokuSolverC/main]
+   70,104 ( 2.22%)  functions/task_hash.c:free_hash_table [/home/calo8122/HPP/SudokuSolverC/main]
+   36,500 ( 1.16%)  functions/parallel.c:deep_copy_sudoku [/home/calo8122/HPP/SudokuSolverC/main]
+   31,298 ( 0.99%)  main.c:parallel_sudoku_solver [/home/calo8122/HPP/SudokuSolverC/main]
+   29,321 ( 0.93%)  ./elf/./elf/dl-lookup.c:do_lookup_x [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+   25,119 ( 0.80%)  ./elf/./elf/dl-tunables.c:__GI___tunables_init [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+   25,053 ( 0.79%)  ./elf/./elf/dl-lookup.c:_dl_lookup_symbol_x [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+   19,577 ( 0.62%)  ./elf/../sysdeps/x86_64/dl-machine.h:_dl_relocate_object
+   13,725 ( 0.43%)  ./malloc/./malloc/malloc.c:_int_malloc [/usr/lib/x86_64-linux-gnu/libc.so.6]
+   10,550 ( 0.33%)  ./elf/./elf/do-rel.h:_dl_relocate_object
+    9,156 ( 0.29%)  ./string/../sysdeps/x86_64/multiarch/memset-vec-unaligned-erms.S:__memset_sse2_unaligned [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    8,606 ( 0.27%)  main.c:solve.part.0 [/home/calo8122/HPP/SudokuSolverC/main]
+    7,730 ( 0.24%)  ./string/../sysdeps/x86_64/strcmp.S:strcmp [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    7,674 ( 0.24%)  main.c:fully_solved_board [/home/calo8122/HPP/SudokuSolverC/main]
+    6,457 ( 0.20%)  ./elf/./elf/dl-lookup.c:check_match [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    4,844 ( 0.15%)  ./malloc/./malloc/malloc.c:_int_free [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    4,609 ( 0.15%)  ./malloc/./malloc/malloc.c:malloc [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    4,192 ( 0.13%)  ./elf/../sysdeps/x86/dl-cacheinfo.h:intel_check_word.constprop.0 [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    4,086 ( 0.13%)  ./elf/../bits/stdlib-bsearch.h:intel_check_word.constprop.0
+    3,825 ( 0.12%)  ./nptl/./nptl/pthread_mutex_lock.c:pthread_mutex_lock@@GLIBC_2.2.5 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    2,727 ( 0.09%)  ./elf/./elf/dl-tunables.h:__GI___tunables_init
+    2,683 ( 0.09%)  ./elf/./elf/dl-version.c:_dl_check_map_versions [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    2,658 ( 0.08%)  ./nptl/./nptl/pthread_mutex_unlock.c:pthread_mutex_unlock@@GLIBC_2.2.5 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    1,987 ( 0.06%)  ./stdio-common/./stdio-common/printf_fp.c:__printf_fp_l [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    1,709 ( 0.05%)  ./stdio-common/./stdio-common/vfprintf-internal.c:__vfprintf_internal [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    1,676 ( 0.05%)  ./malloc/./malloc/malloc.c:free [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    1,640 ( 0.05%)  ./libio/./libio/fileops.c:_IO_file_overflow@@GLIBC_2.2.5 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    1,546 ( 0.05%)  ./elf/./elf/dl-load.c:_dl_map_object_from_fd [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    1,195 ( 0.04%)  ./elf/./elf/rtld.c:dl_main [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    1,130 ( 0.04%)  main.c:worker_thread [/home/calo8122/HPP/SudokuSolverC/main]
+    1,123 ( 0.04%)  ./nptl/./nptl/pthread_create.c:pthread_create@@GLIBC_2.34 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+    1,088 ( 0.03%)  ./nptl/./nptl/allocatestack.c:pthread_create@@GLIBC_2.34
+    1,080 ( 0.03%)  ./elf/./elf/dl-cache.c:_dl_cache_libcmp [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+    1,057 ( 0.03%)  ./elf/../sysdeps/generic/dl-protected.h:do_lookup_x
+    1,040 ( 0.03%)  ./libio/./libio/fileops.c:_IO_file_xsputn@@GLIBC_2.2.5 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+      948 ( 0.03%)  ./elf/./elf/dl-deps.c:_dl_map_object_deps [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      883 ( 0.03%)  ./elf/../sysdeps/x86_64/dl-machine.h:_dl_start
+      832 ( 0.03%)  ./elf/../elf/dl-tls.c:_dl_allocate_tls [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      815 ( 0.03%)  ./elf/./elf/do-rel.h:_dl_start
+      794 ( 0.03%)  functions/init_sudoku.c:init_sudoku [/home/calo8122/HPP/SudokuSolverC/main]
+      776 ( 0.02%)  ./malloc/./malloc/malloc.c:ptmalloc_init.part.0
+      769 ( 0.02%)  ./malloc/./malloc/malloc.c:arena_get2.part.0
+      708 ( 0.02%)  ./elf/../sysdeps/x86/dl-cacheinfo.h:handle_intel.constprop.0 [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      704 ( 0.02%)  ./nptl/./nptl/pthread_create.c:start_thread [/usr/lib/x86_64-linux-gnu/libc.so.6]
+      696 ( 0.02%)  ./libio/./libio/genops.c:_IO_default_xsputn [/usr/lib/x86_64-linux-gnu/libc.so.6]
+      694 ( 0.02%)  ./elf/./elf/dl-hwcaps.c:_dl_important_hwcaps [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      677 ( 0.02%)  ./elf/./elf/dl-tunables.c:__tunable_get_val [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      671 ( 0.02%)  ./malloc/./malloc/malloc.c:calloc [/usr/lib/x86_64-linux-gnu/libc.so.6]
+      645 ( 0.02%)  ./elf/./elf/dl-minimal-malloc.c:__minimal_malloc [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      634 ( 0.02%)  ./stdio-common/./stdio-common/printf_fp.c:hack_digit [/usr/lib/x86_64-linux-gnu/libc.so.6]
+      631 ( 0.02%)  ./elf/./elf/dl-load.c:open_verify.constprop.0 [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      623 ( 0.02%)  ./elf/./elf/dl-load.c:open_path [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      598 ( 0.02%)  functions/parallel.c:deque_push [/home/calo8122/HPP/SudokuSolverC/main]
+      585 ( 0.02%)  ./elf/./elf/dl-object.c:_dl_new_object [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      560 ( 0.02%)  ./elf/../sysdeps/generic/ldsodefs.h:do_lookup_x
+      551 ( 0.02%)  ./elf/./elf/dl-reloc.c:_dl_relocate_object [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      549 ( 0.02%)  ./nptl/./nptl/pthread_join_common.c:__pthread_clockjoin_ex [/usr/lib/x86_64-linux-gnu/libc.so.6]
+      542 ( 0.02%)  ./malloc/./malloc/malloc.c:malloc_consolidate [/usr/lib/x86_64-linux-gnu/libc.so.6]
+      534 ( 0.02%)  ./string/../sysdeps/x86_64/multiarch/memset-vec-unaligned-erms.S:memset [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      511 ( 0.02%)  ./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:mempcpy [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+      505 ( 0.02%)  ./elf/./elf/get-dynamic-info.h:_dl_map_object_from_fd
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: functions/init_sudoku.c
+--------------------------------------------------------------------------------
+Ir           
+
+  .           #include "init_sudoku.h"
+  .           
+  .           #include <stdint.h>
+  .           #include <stdio.h>
+  .           #include <stdlib.h>
+  .           
+  .           static void populate_board(Sudoku *sudoku);
+  .           
+ 12 ( 0.00%)  Sudoku *init_sudoku(int N) {
+  3 ( 0.00%)      Sudoku *sudoku = malloc(sizeof(Sudoku));
+189 ( 0.01%)  => ???:0x00000000001092b0 (1x)
+  2 ( 0.00%)      if (!sudoku)
+  .                   return NULL;
+  .           
+  4 ( 0.00%)      sudoku->base = N;
+  2 ( 0.00%)      sudoku->len = N * N;
+  .               int len = N * N;
+  .           
+  7 ( 0.00%)      sudoku->grid = malloc(len * len * sizeof(Cell));
+191 ( 0.01%)  => ???:0x00000000001092b0 (1x)
+  2 ( 0.00%)      if (!sudoku->grid) {
+  .                   free(sudoku);
+  .                   return NULL;
+  .               }
+  .           
+  .               populate_board(sudoku);
+  .               return sudoku;
+ 12 ( 0.00%)  }
+  .           
+  .           // FREE PEER ARRAYS FOR EACH CELL TOO
+  6 ( 0.00%)  void free_sudoku(Sudoku *sudoku) {
+  .               // Row 0 points to all cell memory
+  4 ( 0.00%)      free(sudoku->grid);
+278 ( 0.01%)  => ???:0x00000000001091e0 (2x)
+  4 ( 0.00%)      free(sudoku);
+210 ( 0.01%)  => ???:0x00000000001091e0 (2x)
+  2 ( 0.00%)  };
+  .           
+  .           static void populate_board(Sudoku *sudoku) {
+  .               char filename[40];
+  .               int len = sudoku->len;
+  .               Cell* grid = sudoku->grid;
+  .           
+  .               // Assuming placed in ./boards directory
+  .               snprintf(filename, sizeof(filename), "boards/board_%dx%d.dat", len, len);
+  4 ( 0.00%)      FILE *file = fopen(filename, "rb");
+619 ( 0.02%)  => ???:0x00000000001092f0 (1x)
+  4 ( 0.00%)      if (!file) {
+  .                   printf("Failed to open file\n");
+  .                   exit(EXIT_FAILURE);
+  .               }
+  .           
+  .               // Skip first two bytes (already known)
+  4 ( 0.00%)      fseek(file, 2, SEEK_SET);
+548 ( 0.02%)  => ???:0x00000000001092c0 (1x)
+  .           
+  .               // Read data from the binary file
+  3 ( 0.00%)      unsigned char *data = malloc(len * len);  // Buffer for faster reading
+182 ( 0.01%)  => ???:0x00000000001092b0 (1x)
+  2 ( 0.00%)      if (!data) {
+  .                   fclose(file);
+  .                   exit(EXIT_FAILURE);
+  .               }
+  .           
+  2 ( 0.00%)      if (fread(data, 1, len * len, file) != (size_t)(len * len)) {
+  .                   perror("Error reading file");
+  .                   exit(EXIT_FAILURE);
+  .               }
+  2 ( 0.00%)      fclose(file);
+545 ( 0.02%)  => ???:0x0000000000109230 (1x)
+  .           
+  .               // Vectorized loop
+ 92 ( 0.00%)      for (int i = 0; i < len * len; i++) {
+635 ( 0.02%)          grid[i].value = (int)data[i];
+  .               }
+  .           
+  .           
+  .               // Close the file
+  2 ( 0.00%)      free(data);
+ 91 ( 0.00%)  => ???:0x00000000001091e0 (1x)
+  .           }
+--------------------------------------------------------------------------------
+-- Auto-annotated source: functions/parallel.c
+--------------------------------------------------------------------------------
+Ir              
+
+-- line 7 ----------------------------------------
+     .           #include <stdlib.h>
+     .           #include <sys/types.h>
+     .           
+     .           Sudoku *deep_copy_sudoku(Sudoku *parent);
+     .           
+     .           u_int32_t generate_task_id(Sudoku *sudoku);
+     .           
+     .           // Create a new state by deep copying the current state of the board
+   115 ( 0.00%)  Task *create_task(Sudoku *parent) {
+    69 ( 0.00%)      Task *new_task = malloc(sizeof(Task));
+ 4,258 ( 0.13%)  => ???:0x00000000001092b0 (23x)
+     .           
+    69 ( 0.00%)      new_task->sudoku = deep_copy_sudoku(parent);
+43,619 ( 1.38%)  => functions/parallel.c:deep_copy_sudoku (23x)
+    23 ( 0.00%)      new_task->task_id = generate_task_id(new_task->sudoku);
+     .               return new_task;
+   115 ( 0.00%)  }
+     .           
+    51 ( 0.00%)  void free_task(Task *task) {
+    34 ( 0.00%)      free(task->sudoku);
+ 1,681 ( 0.05%)  => ???:0x00000000001091e0 (17x)
+    34 ( 0.00%)      free(task);
+ 1,759 ( 0.06%)  => ???:0x00000000001091e0 (17x)
+    17 ( 0.00%)  }
+     .           
+     .           // A simple hash function for generating task ID based on Sudoku grid
+     .           u_int32_t generate_task_id(Sudoku *sudoku) {
+14,444 ( 0.46%)      u_int32_t hash = 0;
+    23 ( 0.00%)      int len = sudoku->len;
+     .           
+43,240 ( 1.37%)      for (int i = 0; i < len * len; i++) {
+71,875 ( 2.28%)          hash = hash * 31 + sudoku->grid[i].value;
+     .               }
+     .           
+     .               return hash;
+     .           }
+     .           
+   225 ( 0.01%)  Sudoku *deep_copy_sudoku(Sudoku *parent) {
+    75 ( 0.00%)      Sudoku *child = malloc(sizeof(Sudoku));
+ 4,316 ( 0.14%)  => ???:0x00000000001092b0 (25x)
+    50 ( 0.00%)      if (!child) {
+     .                   printf("Sudoku deep copy failed.\n");
+     .                   exit(EXIT_FAILURE);
+     .               }
+     .               
+   125 ( 0.00%)      child->base = parent->base;
+     .               child->len = parent->len;
+     .               int len = child->len;
+     .               
+     .               // Grid memory
+   175 ( 0.01%)      child->grid = malloc(len * len * sizeof(Cell));
+ 6,700 ( 0.21%)  => ???:0x00000000001092b0 (25x)
+    50 ( 0.00%)      if (!child->grid) {
+     .                   free(child);
+     .                   printf("Grid deep copy failed.\n");
+     .                   exit(EXIT_FAILURE);
+     .               }
+     .               int r,c;
+     .               // First, copy all cell values
+16,100 ( 0.51%)      for (r = 0; r < len; r++) {
+ 8,475 ( 0.27%)          for (c = 0; c < len; c++) {
+ 1,275 ( 0.04%)              int idx = r * len + c;
+ 9,725 ( 0.31%)              child->grid[idx].value = parent->grid[idx].value;
+     .                   }
+     .               }
+     .               return child;
+   225 ( 0.01%)  }
+     .           
+     .           // Initialize deque
+     8 ( 0.00%)  void deque_init(WorkDeque *deque, int thread_id, int N_THREADS) {
+     .               deque->top = 0;
+     .               deque->bottom = 0;
+    32 ( 0.00%)      deque->thread_id = thread_id;
+     .               deque->N_THREADS = N_THREADS;
+    16 ( 0.00%)      deque->num_tasks = 0;
+     .               deque->found_by_thread = 0;
+    24 ( 0.00%)      pthread_mutex_init(&deque->mutex, NULL); // Initialize mutex
+   256 ( 0.01%)  => ???:0x0000000000109340 (8x)
+     .           }
+     .           
+     .           // Push task (LIFO, only owner thread calls this)
+   138 ( 0.00%)  void deque_push(WorkDeque *deque, Task *task) {
+    69 ( 0.00%)      pthread_mutex_lock(&deque->mutex); // Lock the mutex
+   859 ( 0.03%)  => ???:0x0000000000109350 (23x)
+     .           
+    23 ( 0.00%)      int b = deque->bottom;
+   184 ( 0.01%)      deque->tasks[b % DEQUE_SIZE] = task;
+    46 ( 0.00%)      deque->bottom = b + 1;
+    23 ( 0.00%)      deque->num_tasks += 1;
+     .           
+    46 ( 0.00%)      pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
+   582 ( 0.02%)  => ???:0x00000000001092a0 (23x)
+    69 ( 0.00%)  }
+     .           
+   102 ( 0.00%)  Task *deque_pop(WorkDeque *deque) {
+    51 ( 0.00%)      pthread_mutex_lock(&deque->mutex); // Lock the mutex
+   629 ( 0.02%)  => ???:0x0000000000109350 (17x)
+     .           
+    34 ( 0.00%)      int b = deque->bottom - 1; // Remove atomic fetch sub
+     .               int t = deque->top;
+     .           
+     .               Task *task = NULL;
+    34 ( 0.00%)      if (t <= b) {              // Tasks available
+    13 ( 0.00%)          deque->num_tasks -= 1; // No need for atomic fetch sub
+   104 ( 0.00%)          task = deque->tasks[b % DEQUE_SIZE];
+    13 ( 0.00%)          deque->bottom = b; // Restore bottom
+     .               }
+     .           
+    34 ( 0.00%)      pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
+   442 ( 0.01%)  => ???:0x00000000001092a0 (17x)
+     .               return task;
+    85 ( 0.00%)  }
+     .           
+    96 ( 0.00%)  Task *deque_steal(WorkDeque *deque) {
+    48 ( 0.00%)      pthread_mutex_lock(&deque->mutex); // Lock the mutex
+   592 ( 0.02%)  => ???:0x0000000000109350 (16x)
+     .           
+    16 ( 0.00%)      int t = deque->top; // Remove atomic load
+     .               int b = deque->bottom;
+     .           
+     .               Task *task = NULL;
+    32 ( 0.00%)      if (t < b) { // Tasks available
+    32 ( 0.00%)          task = deque->tasks[t % DEQUE_SIZE];
+     .           
+     .                   // Try to steal the task (update top)
+     8 ( 0.00%)          deque->top = t + 1;    // Update top (no atomic CAS)
+     4 ( 0.00%)          deque->num_tasks -= 1; // Decrement num_tasks
+     .               }
+     .           
+    32 ( 0.00%)      pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
+   416 ( 0.01%)  => ???:0x00000000001092a0 (16x)
+     .               return task;
+    80 ( 0.00%)  }
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: main.c
+--------------------------------------------------------------------------------
+Ir               
+
+-- line 62 ----------------------------------------
+      .           int total_num_candidates(Sudoku *sudoku);
+      .           
+      .           int fully_solved_board(Sudoku *sudoku);
+      .           
+      .           void *worker_thread(void *arg);
+      .           void parallel_sudoku_solver(Sudoku *initial_sudoku, int N_THREADS);
+      .           Task *steal_from_other_deques(int N_THREADS, int thread_id);
+      .           
+      4 ( 0.00%)  int main(int argc, char *argv[]) {
+      2 ( 0.00%)      if (argc != 2) {
+      .                   printf("Usage: <BASE>");
+      .                   return 1;
+      .               }
+      6 ( 0.00%)      int base = strtoull(argv[1], NULL, 10);
+    110 ( 0.00%)  => ???:0x0000000000109280 (1x)
+      1 ( 0.00%)      printf("Side length:          %d\n", base * base);
+      .           
+      .               int N_THREADS = 8;
+      .           
+      .               double elapsed_time;
+      4 ( 0.00%)      clock_gettime(CLOCK_MONOTONIC, &start);
+     13 ( 0.00%)  => ???:0x0000000000109220 (1x)
+      3 ( 0.00%)      Sudoku *sudoku = init_sudoku(base);
+  4,800 ( 0.15%)  => /home/calo8122/HPP/SudokuSolverC/functions/init_sudoku.c:init_sudoku (1x)
+      .           
+      4 ( 0.00%)      clock_gettime(CLOCK_MONOTONIC, &end);
+     13 ( 0.00%)  => ???:0x0000000000109220 (1x)
+      1 ( 0.00%)      elapsed_time =
+      9 ( 0.00%)          (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+      .               printf("Initialization time: %12.9f seconds\n", elapsed_time);
+      .           
+      3 ( 0.00%)      clock_gettime(CLOCK_MONOTONIC, &start);
+     13 ( 0.00%)  => ???:0x0000000000109220 (1x)
+      3 ( 0.00%)      parallel_sudoku_solver(sudoku, N_THREADS);
+193,630 ( 6.13%)  => main.c:parallel_sudoku_solver (1x)
+      3 ( 0.00%)      clock_gettime(CLOCK_MONOTONIC, &end);
+     13 ( 0.00%)  => ???:0x0000000000109220 (1x)
+      1 ( 0.00%)      elapsed_time =
+      9 ( 0.00%)          (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+      .           
+      .               printf("Solve time:           %.9f seconds\n", elapsed_time);
+      3 ( 0.00%)      printf("Solved correctly? %5d\n", fully_solved_board(solved_sudoku));
+530,174 (16.80%)  => main.c:fully_solved_board (1x)
+      .           
+      2 ( 0.00%)      free_sudoku(sudoku);
+    271 ( 0.01%)  => /home/calo8122/HPP/SudokuSolverC/functions/init_sudoku.c:free_sudoku (1x)
+      2 ( 0.00%)      return 0;
+      4 ( 0.00%)  }
+      .           
+      .           
+  2,907 ( 0.09%)  int solve(Sudoku *sudoku, WorkDeque *deque, int depth) {
+      .               // Check if solution already found
+  1,576 ( 0.05%)      if (solution_found) {
+2,232,575 (70.73%)  => main.c:solve.part.0 (14x)
+      .                   return 0;
+      .               }
+      .           
+      .               coord_t pos = first_empty_cell(sudoku);
+      .               int len = sudoku->len;
+      .           
+      .               if (pos.found == 0) { // No empty cells found, DONE!
+    195 ( 0.01%)          return 1;
+      .               }
+      .               
+      .               int r = pos.r;
+      .               int c = pos.c;
+      .               
+      .               // Create parallel tasks only in the first few levels of recursion
+      .               // to avoid excessive task creation
+    966 ( 0.03%)      if (depth < 3) {
+     36 ( 0.00%)          int valid_count = 0;
+  3,132 ( 0.10%)          for (int num = 1; num <= len; num++) {
+  3,600 ( 0.11%)              if (is_valid_placement(sudoku, r, c, num)) {
+ 83,912 ( 2.66%)  => main.c:is_valid_placement (350x)
+  1,800 ( 0.06%)                  valid_count++;
+      .                       }
+      .                   }
+      .                   
+      .                   // Only parallelize if we have multiple options
+    252 ( 0.01%)          if (valid_count > 1) {
+     13 ( 0.00%)              int first = 1;
+  1,040 ( 0.03%)              for (int num = 1; num <= len; num++) {
+  2,275 ( 0.07%)                  if (is_valid_placement(sudoku, r, c, num)) {
+ 35,187 ( 1.11%)  => main.c:is_valid_placement (125x)
+     84 ( 0.00%)                      if (first) {
+      .                                   // Handle first valid number ourselves
+     39 ( 0.00%)                          sudoku->grid[r * len + c].value = num;
+     13 ( 0.00%)                          first = 0;
+      .                                   
+     78 ( 0.00%)                          if (solve(sudoku, deque, depth + 1)) {
+258,909 ( 8.20%)  => main.c:solve.part.0'2 (5x)
+      .                                       return 1;
+      .                                   }
+      .                                   
+     39 ( 0.00%)                          sudoku->grid[r * len + c].value = 0;
+      .                               } else {
+      .                                   // Create new tasks for other valid numbers
+     30 ( 0.00%)                          Task *new_task = create_task(sudoku);
+ 38,229 ( 1.21%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:create_task (5x)
+     45 ( 0.00%)                          new_task->sudoku->grid[r * len + c].value = num;
+      .                                   
+     45 ( 0.00%)                          deque_push(deque, new_task);
+    445 ( 0.01%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:deque_push (5x)
+      .                               }
+      .                           }
+      .                       }
+      .                       return 0; // We've either processed or delegated all options
+      .                   }
+      .               }
+      .               
+      .               // Standard backtracking for deeper recursion levels
+ 15,847 ( 0.50%)      for (int num = 1; num <= len; num++) {
+ 37,737 ( 1.20%)          if (is_valid_placement(sudoku, r, c, num)) {
+ 48,725 ( 1.54%)  => main.c:is_valid_placement (225x)
+    888 ( 0.03%)              sudoku->grid[r * len + c].value = num;
+      .                       
+  3,373 ( 0.11%)              if (solve(sudoku, deque, depth + 1)) {
+      .                           return 1;
+      .                       }
+      .                       
+    408 ( 0.01%)              sudoku->grid[r * len + c].value = 0;
+      .                   }
+      .               }
+      .               
+      .               return 0;
+  2,907 ( 0.09%)  }
+      .           
+     14 ( 0.00%)  void parallel_sudoku_solver(Sudoku *initial_sudoku, int N_THREADS) {
+      7 ( 0.00%)      deques = malloc(sizeof(WorkDeque) * N_THREADS);
+    284 ( 0.01%)  => ???:0x00000000001092b0 (1x)
+     16 ( 0.00%)      pthread_t threads[N_THREADS];
+      .           
+      .               // Initialize deques
+     39 ( 0.00%)      for (int i = 0; i < N_THREADS; i++) {
+     39 ( 0.00%)          deque_init(&deques[i], i, N_THREADS);
+    336 ( 0.01%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:deque_init (8x)
+      .               }
+      .           
+      .               // Create initial tasks and assign them to thread 0
+      .               // They will get stolen by other threads
+      .               int tasks_assigned = 0;
+      .           
+      7 ( 0.00%)      Sudoku *temp_sudoku = deep_copy_sudoku(initial_sudoku);
+  2,176 ( 0.07%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:deep_copy_sudoku (1x)
+      .           
+     13 ( 0.00%)      while (tasks_assigned < N_THREADS) { // Some buffer tasks to start them off
+      .                   coord_t pos = first_empty_cell(temp_sudoku);
+      .                   if (pos.found == 0) {
+      .                       printf("No empty cell found before initializing threads.\n");
+      .                       free_sudoku(temp_sudoku);
+      .                       free(deques);
+      .                       exit(EXIT_FAILURE);
+      .                   }
+      .           
+      .                   int r = pos.r;
+      .                   int c = pos.c;
+      .                   int num;
+      .           
+    340 ( 0.01%)          for (num = 1; num <= initial_sudoku->len; num++) {
+      .                       if (is_valid_placement(initial_sudoku, r, c, num)) {
+      .                           // Set cell and send to thread 0 deque
+     24 ( 0.00%)                  Task *task = create_task(temp_sudoku);
+ 63,612 ( 2.02%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:create_task (8x)
+     56 ( 0.00%)                  task->sudoku->grid[r * initial_sudoku->len + c].value = num;
+     24 ( 0.00%)                  temp_sudoku->grid[r * initial_sudoku->len + c].value = num;
+     16 ( 0.00%)                  deque_push(&deques[0],
+    704 ( 0.02%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:deque_push (8x)
+      .                                      task); // Put the state in the first workers queue
+      8 ( 0.00%)                  tasks_assigned++;
+      .                       }
+      .                   }
+      .               }
+      .           
+      2 ( 0.00%)      free_sudoku(temp_sudoku);
+    233 ( 0.01%)  => /home/calo8122/HPP/SudokuSolverC/functions/init_sudoku.c:free_sudoku (1x)
+      4 ( 0.00%)      hash_table = (HashTable *)malloc(sizeof(HashTable));
+    438 ( 0.01%)  => ???:0x00000000001092b0 (1x)
+      2 ( 0.00%)      if (hash_table == NULL) {
+      .                   // Handle memory allocation failure
+      .                   fprintf(stderr, "Failed to allocate memory for hash table\n");
+      .                   exit(1);
+      .               }
+      .           
+      6 ( 0.00%)      initialize_hash_table(hash_table);
+  8,810 ( 0.28%)  => /home/calo8122/HPP/SudokuSolverC/functions/task_hash.c:initialize_hash_table (1x)
+      .           
+      .               // Launch worker threads
+     34 ( 0.00%)      for (int i = 0; i < N_THREADS; i++) {
+     48 ( 0.00%)          pthread_create(&threads[i], NULL, worker_thread, &deques[i]);
+  9,651 ( 0.31%)  => ???:0x00000000001092e0 (8x)
+      .               }
+      .           
+      .           
+      .               // Join threads
+     30 ( 0.00%)      for (int i = 0; i < N_THREADS; i++) {
+     24 ( 0.00%)          pthread_join(threads[i], NULL);
+  3,389 ( 0.11%)  => ???:0x0000000000109330 (8x)
+      .               }
+      .               for (int i = 0; i < N_THREADS; i++) {
+      .                   if (deques[i].found_by_thread){
+      .                   }
+      .               }
+      .               
+      .               /*
+      .               int count = 0;
+-- line 240 ----------------------------------------
+-- line 245 ----------------------------------------
+      .                   while (current != NULL) {
+      .                       printf("  [%d] Task ID: %u\n", count, current->task_id);
+      .                       count++;
+      .                       current = current->next;
+      .                   }
+      .               }
+      .               */
+      .           
+     24 ( 0.00%)      for (int i = 0; i < N_THREADS; i++)
+     32 ( 0.00%)          pthread_mutex_destroy(&(deques[i].mutex)); // Destroy the thread mutexes
+    112 ( 0.00%)  => ???:0x0000000000109250 (8x)
+      2 ( 0.00%)      free(deques);
+    443 ( 0.01%)  => ???:0x00000000001091e0 (1x)
+      2 ( 0.00%)      free_hash_table(hash_table);
+ 72,144 ( 2.29%)  => /home/calo8122/HPP/SudokuSolverC/functions/task_hash.c:free_hash_table (1x)
+     71 ( 0.00%)  }
+      .           
+     88 ( 0.00%)  void *worker_thread(void *arg) {
+      .               WorkDeque *deque = (WorkDeque *)arg;
+      .           
+      .               while (true) {
+      .                   // Check if solution found
+     48 ( 0.00%)          pthread_mutex_lock(&solution_mutex);
+    888 ( 0.03%)  => ???:0x0000000000109350 (24x)
+     48 ( 0.00%)          if (solution_found) {
+     31 ( 0.00%)              pthread_mutex_unlock(&solution_mutex);
+    182 ( 0.01%)  => ???:0x00000000001092a0 (7x)
+      .                       break;
+      .                   }
+     17 ( 0.00%)          pthread_mutex_unlock(&solution_mutex);
+    442 ( 0.01%)  => ???:0x00000000001092a0 (17x)
+      .           
+      .                   // Take a state from own deque
+     51 ( 0.00%)          Task *task = deque_pop(deque);
+  1,541 ( 0.05%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:deque_pop (17x)
+     34 ( 0.00%)          if (!task) {
+     12 ( 0.00%)              task = steal_from_other_deques(deque->N_THREADS, deque->thread_id);
+      .                       if (!task) {
+      .                           // No tasks available, sleep briefly to reduce CPU usage
+      .                           nanosleep(&ts, NULL);
+      .                           continue;
+      .                       }
+      .                   }
+      .                
+      .                   // Check if this board state has been explored before
+     51 ( 0.00%)          pthread_mutex_lock(&hash_table->mutex);
+    629 ( 0.02%)  => ???:0x0000000000109350 (17x)
+     85 ( 0.00%)          if (task_exists_in_hash_table(hash_table, task->task_id)) {
+    292 ( 0.01%)  => /home/calo8122/HPP/SudokuSolverC/functions/task_hash.c:task_exists_in_hash_table (17x)
+      9 ( 0.00%)              pthread_mutex_unlock(&hash_table->mutex);
+     78 ( 0.00%)  => ???:0x00000000001092a0 (3x)
+      6 ( 0.00%)              free_task(task);
+    690 ( 0.02%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:free_task (3x)
+      3 ( 0.00%)              continue;
+      .                   }
+      .                   
+      .                   // Add to hash table
+     42 ( 0.00%)          insert_task_to_hash_table(hash_table, task);
+  2,470 ( 0.08%)  => /home/calo8122/HPP/SudokuSolverC/functions/task_hash.c:insert_task_to_hash_table (14x)
+     42 ( 0.00%)          pthread_mutex_unlock(&hash_table->mutex);
+    364 ( 0.01%)  => ???:0x00000000001092a0 (14x)
+      .                   
+      .                   // Call the modified solve function that can create additional tasks
+     42 ( 0.00%)          if (solve(task->sudoku, deque, 0)) {
+      2 ( 0.00%)              pthread_mutex_lock(&solution_mutex);
+     37 ( 0.00%)  => ???:0x0000000000109350 (1x)
+      2 ( 0.00%)              if (!solution_found) {
+      1 ( 0.00%)                  solution_found = true;
+      2 ( 0.00%)                  deque->found_by_thread = 1;
+      4 ( 0.00%)                  solved_sudoku = deep_copy_sudoku(task->sudoku);
+  1,721 ( 0.05%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:deep_copy_sudoku (1x)
+      .                       }
+      2 ( 0.00%)              pthread_mutex_unlock(&solution_mutex);
+     26 ( 0.00%)  => ???:0x00000000001092a0 (1x)
+      2 ( 0.00%)              free_task(task);
+    206 ( 0.01%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:free_task (1x)
+      .                       break;
+      .                   }
+      .           
+      .           
+     39 ( 0.00%)          free_task(task);
+  2,680 ( 0.08%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:free_task (13x)
+      .               }
+      1 ( 0.00%)      return NULL;
+     72 ( 0.00%)  }
+      .           
+      .           Task *steal_from_other_deques(int N_THREADS, int thread_id) {
+     64 ( 0.00%)      for (int i = 0; i < N_THREADS; i++) {
+      .                   // Don't steal from self
+     60 ( 0.00%)          int steal_deque_id =
+      .                       (thread_id + i) % N_THREADS; // Try stealing from other deques
+     40 ( 0.00%)          if (steal_deque_id != thread_id) {
+    128 ( 0.00%)              Task *task = deque_steal(&deques[steal_deque_id]); // Steal a task
+  1,356 ( 0.04%)  => /home/calo8122/HPP/SudokuSolverC/functions/parallel.c:deque_steal (16x)
+     32 ( 0.00%)              if (task) {
+      .                           return task; // Successfully stole a task
+      .                       }
+      .                   }
+      .               }
+      .               return NULL; // No task available to steal
+      .           }
+      .           
+      .           coord_t first_empty_cell(Sudoku *sudoku) {
+      .               coord_t pos;
+      .               pos.c = 0;
+      .               pos.r = 0;
+      .               pos.found = 0;
+    331 ( 0.01%)      int len = sudoku->len;
+      .           
+      .               int r, c;
+ 17,656 ( 0.56%)      for (r = 0; r < len; r++) {
+342,716 (10.86%)          for (c = 0; c < len; c++) {
+254,062 ( 8.05%)              if (sudoku->grid[r * len + c].value == 0) {
+      .                           pos.found = 1;
+      .                           pos.r = r;
+      .                           pos.c = c;
+      .                           return pos;
+      .                       }
+      .                   }
+      .               }
+      .               return pos;
+      .           }
+      .           
+ 34,699 ( 1.10%)  int is_valid_placement(Sudoku *sudoku, int r, int c, int num) {
+  7,241 ( 0.23%)      int len = sudoku->len;
+  1,162 ( 0.04%)      int base = sudoku->base;
+      .               
+      .               // Check row constraints
+      .               int row, col, box_r, box_c;
+361,568 (11.45%)      for (col = 0; col < len; col++) {
+811,170 (25.70%)          if (col != c && sudoku->grid[r * len + col].value == num) {
+  6,247 ( 0.20%)              return 0; // Found same number in row
+      .                   }
+      .               }
+      .               
+      .               // Check column constraints
+156,572 ( 4.96%)      for (row = 0; row < len; row++) {
+233,204 ( 7.39%)          if (row != r && sudoku->grid[row * len + c].value == num) {
+      .                       return 0; // Found same number in column
+      .                   }
+      .               }
+      .               
+      .               // Check box constraints
+  5,810 ( 0.18%)      int box_row_start = (r / base) * base;
+  4,648 ( 0.15%)      int box_col_start = (c / base) * base;
+      .           
+      .               
+ 26,304 ( 0.83%)      for (box_r = box_row_start; box_r < box_row_start + base; box_r++) {
+ 95,692 ( 3.03%)          for (box_c = box_col_start; box_c < box_col_start + base; box_c++) {
+214,592 ( 6.80%)              if ((box_r != r || box_c != c) && sudoku->grid[box_r * len + box_c].value == num) {
+      .                           return 0; // Found same number in box
+      .                       }
+      .                   }
+      .               }
+      .               
+  1,988 ( 0.06%)      return 1; // Valid placement - no conflicts found
+ 14,999 ( 0.48%)  }
+      .           
+     57 ( 0.00%)  int fully_solved_board(Sudoku *sudoku) {
+      1 ( 0.00%)      int len = sudoku->len;
+      .               int r, c;
+    106 ( 0.00%)      for (r = 0; r < sudoku->len; r++) {
+  1,875 ( 0.06%)          for (c = 0; c < sudoku->len; c++) {
+  1,250 ( 0.04%)              int val = sudoku->grid[r * len + c].value;
+  4,375 ( 0.14%)              if (val == 0 || !is_valid_placement(sudoku, r, c, val)) {
+522,500 (16.55%)  => main.c:is_valid_placement (625x)
+      .                           return 0; // Either unfilled or invalid cell
+      .                       }
+      .                   }
+      .               }
+      2 ( 0.00%)      return 1;
+      8 ( 0.00%)  }
+--------------------------------------------------------------------------------
+-- Auto-annotated source: functions/task_hash.c
+--------------------------------------------------------------------------------
+Ir              
+
+     .           #include "task_hash.h"
+     .           #include <stdio.h>
+     .           #include <time.h>
+     2 ( 0.00%)  void initialize_hash_table(HashTable *hash_table) {
+     2 ( 0.00%)      if (hash_table == NULL) return;
+     .               
+     .               for (int i = 0; i < TABLE_SIZE; i++) {
+     4 ( 0.00%)          hash_table->table[i] = NULL;
+ 8,766 ( 0.28%)  => ???:0x0000000000109270 (1x)
+     .               }
+     3 ( 0.00%)      pthread_mutex_init(&hash_table->mutex, NULL);
+    32 ( 0.00%)  => ???:0x0000000000109340 (1x)
+     1 ( 0.00%)  }
+     .           
+    70 ( 0.00%)  void insert_task_to_hash_table(HashTable *hash_table, Task *task) {
+    56 ( 0.00%)      if (hash_table == NULL || task == NULL) return;
+     .               
+   112 ( 0.00%)      int index = task->task_id % TABLE_SIZE;
+     .               
+     .               // Create new node with just the task_id
+    28 ( 0.00%)      HashNode *node = (HashNode *)malloc(sizeof(HashNode));
+ 2,050 ( 0.06%)  => ???:0x00000000001092b0 (14x)
+    28 ( 0.00%)      if (node == NULL) {
+     .                   fprintf(stderr, "Hash node memory allocation failed.\n");
+     .                   return;
+     .               }
+     .               
+    14 ( 0.00%)      node->task_id = task->task_id;
+    42 ( 0.00%)      node->next = hash_table->table[index];
+    14 ( 0.00%)      hash_table->table[index] = node;
+    56 ( 0.00%)  }
+     .           
+    17 ( 0.00%)  int task_exists_in_hash_table(HashTable* hash_table, u_int32_t task_id) {
+    62 ( 0.00%)      if (hash_table == NULL) return 0;
+     .               
+   119 ( 0.00%)      int index = task_id % TABLE_SIZE;
+     .               
+    34 ( 0.00%)      HashNode *current = hash_table->table[index];
+    48 ( 0.00%)      while (current != NULL) {
+     6 ( 0.00%)          if (current->task_id == task_id) {
+     3 ( 0.00%)              return 1;  // Task exists
+     .                   }
+     .                   current = current->next;
+     .               }
+     .               
+     .               return 0;  // Task does not exist
+     3 ( 0.00%)  }
+     .           
+     9 ( 0.00%)  void free_hash_table(HashTable* hash_table) {
+     2 ( 0.00%)      if (hash_table == NULL) return;
+     .               
+     .               // Free all nodes in each bucket
+30,000 ( 0.95%)      for (int i = 0; i < TABLE_SIZE; i++) {
+10,000 ( 0.32%)          HashNode *current = hash_table->table[i];
+20,042 ( 0.63%)          while (current != NULL) {
+     .                       HashNode *temp = current;
+    28 ( 0.00%)              current = current->next;
+    14 ( 0.00%)              free(temp);
+ 1,600 ( 0.05%)  => ???:0x00000000001091e0 (14x)
+     .                   }
+10,000 ( 0.32%)          hash_table->table[i] = NULL;
+     .               }
+     .               
+     .               // Destroy the mutex
+     2 ( 0.00%)      pthread_mutex_destroy(&(hash_table->mutex));
+    14 ( 0.00%)  => ???:0x0000000000109250 (1x)
+     .               
+     .               // Since hash_table was allocated with malloc, we need to free it
+     2 ( 0.00%)      free(hash_table);
+   426 ( 0.01%)  => ???:0x00000000001091e0 (1x)
+     5 ( 0.00%)  }
+--------------------------------------------------------------------------------
+The following files chosen for auto-annotation could not be found:
+--------------------------------------------------------------------------------
+  ./elf/../bits/stdlib-bsearch.h
+  ./elf/../elf/dl-tls.c
+  ./elf/../sysdeps/generic/dl-protected.h
+  ./elf/../sysdeps/generic/ldsodefs.h
+  ./elf/../sysdeps/x86/dl-cacheinfo.h
+  ./elf/../sysdeps/x86_64/dl-machine.h
+  ./elf/./elf/dl-cache.c
+  ./elf/./elf/dl-deps.c
+  ./elf/./elf/dl-hwcaps.c
+  ./elf/./elf/dl-load.c
+  ./elf/./elf/dl-lookup.c
+  ./elf/./elf/dl-minimal-malloc.c
+  ./elf/./elf/dl-object.c
+  ./elf/./elf/dl-reloc.c
+  ./elf/./elf/dl-tunables.c
+  ./elf/./elf/dl-tunables.h
+  ./elf/./elf/dl-version.c
+  ./elf/./elf/do-rel.h
+  ./elf/./elf/get-dynamic-info.h
+  ./elf/./elf/rtld.c
+  ./libio/./libio/fileops.c
+  ./libio/./libio/genops.c
+  ./malloc/./malloc/malloc.c
+  ./nptl/./nptl/allocatestack.c
+  ./nptl/./nptl/pthread_create.c
+  ./nptl/./nptl/pthread_join_common.c
+  ./nptl/./nptl/pthread_mutex_lock.c
+  ./nptl/./nptl/pthread_mutex_unlock.c
+  ./stdio-common/./stdio-common/printf_fp.c
+  ./stdio-common/./stdio-common/vfprintf-internal.c
+  ./string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
+  ./string/../sysdeps/x86_64/multiarch/memset-vec-unaligned-erms.S
+  ./string/../sysdeps/x86_64/strcmp.S
+
+--------------------------------------------------------------------------------
+Ir                 
+--------------------------------------------------------------------------------
+2,919,411 (92.49%)  events annotated
+

@@ -53,7 +53,9 @@ int is_valid_placement(Sudoku *sudoku, int r, int c, int num);
 
 int is_valid_board(Sudoku *sudoku);
 
-int solve(Sudoku *sudoku);
+int solve2(Sudoku *sudoku);
+
+int solve(Sudoku *sudoku, WorkDeque *deque, int depth);
 
 void remove_peer_candidates(Cell *cell, int len);
 
@@ -73,7 +75,7 @@ int main(int argc, char *argv[]) {
     int base = strtoull(argv[1], NULL, 10);
     printf("Side length:          %d\n", base * base);
 
-    int N_THREADS = 4;
+    int N_THREADS = 8;
 
     double elapsed_time;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -91,40 +93,80 @@ int main(int argc, char *argv[]) {
         (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
     printf("Solve time:           %.9f seconds\n", elapsed_time);
-    print_sudoku(solved_sudoku);
     printf("Solved correctly? %5d\n", fully_solved_board(solved_sudoku));
 
     free_sudoku(sudoku);
     return 0;
 }
 
-int solve(Sudoku *sudoku) {
+
+int solve(Sudoku *sudoku, WorkDeque *deque, int depth) {
+    // Check if solution already found
+    if (solution_found) {
+        return 0;
+    }
+
     coord_t pos = first_empty_cell(sudoku);
     int len = sudoku->len;
 
     if (pos.found == 0) { // No empty cells found, DONE!
         return 1;
     }
+    
     int r = pos.r;
     int c = pos.c;
-    // Try each candidate
-    int num;
-    for (num = 1; num <= sudoku->len; num++) {
-
-        // THIS SHOULD ALWAYS BE TRUE
+    
+    // Create parallel tasks only in the first few levels of recursion
+    // to avoid excessive task creation
+    if (depth < 3) {
+        int valid_count = 0;
+        for (int num = 1; num <= len; num++) {
+            if (is_valid_placement(sudoku, r, c, num)) {
+                valid_count++;
+            }
+        }
+        
+        // Only parallelize if we have multiple options
+        if (valid_count > 1) {
+            int first = 1;
+            for (int num = 1; num <= len; num++) {
+                if (is_valid_placement(sudoku, r, c, num)) {
+                    if (first) {
+                        // Handle first valid number ourselves
+                        sudoku->grid[r * len + c].value = num;
+                        first = 0;
+                        
+                        if (solve(sudoku, deque, depth + 1)) {
+                            return 1;
+                        }
+                        
+                        sudoku->grid[r * len + c].value = 0;
+                    } else {
+                        // Create new tasks for other valid numbers
+                        Task *new_task = create_task(sudoku);
+                        new_task->sudoku->grid[r * len + c].value = num;
+                        
+                        deque_push(deque, new_task);
+                    }
+                }
+            }
+            return 0; // We've either processed or delegated all options
+        }
+    }
+    
+    // Standard backtracking for deeper recursion levels
+    for (int num = 1; num <= len; num++) {
         if (is_valid_placement(sudoku, r, c, num)) {
-            // Set cell
             sudoku->grid[r * len + c].value = num;
-
-            // Backtrack
-            if (solve(sudoku)) {
+            
+            if (solve(sudoku, deque, depth + 1)) {
                 return 1;
             }
-            // Undo the placement
+            
             sudoku->grid[r * len + c].value = 0;
         }
     }
-
+    
     return 0;
 }
 
@@ -218,53 +260,52 @@ void *worker_thread(void *arg) {
     WorkDeque *deque = (WorkDeque *)arg;
 
     while (true) {
-        // Lock the mutex to check the shared solution_found flag
+        // Check if solution found
         pthread_mutex_lock(&solution_mutex);
         if (solution_found) {
             pthread_mutex_unlock(&solution_mutex);
-            break; // Exit the loop if solution is found
+            break;
         }
-        pthread_mutex_unlock(&solution_mutex); // Unlock after checking
+        pthread_mutex_unlock(&solution_mutex);
 
         // Take a state from own deque
         Task *task = deque_pop(deque);
         if (!task) {
-            task = steal_from_other_deques(
-                deque->N_THREADS, deque->thread_id); // Try to steal a task
-        }
-
-        if (task) {
-            // Check if this board state has been explored before
-
-            pthread_mutex_lock(&hash_table->mutex);
-            if (task_exists_in_hash_table(hash_table, task->task_id)) {
-                // This state has been explored before
-                pthread_mutex_unlock(&hash_table->mutex);
-                free_task(task);  // Clean up memory
-                continue;  // Skip this task
+            task = steal_from_other_deques(deque->N_THREADS, deque->thread_id);
+            if (!task) {
+                // No tasks available, sleep briefly to reduce CPU usage
+                nanosleep(&ts, NULL);
+                continue;
             }
-            
-            // If not explored, add to hash table
-            insert_task_to_hash_table(hash_table, task);
+        }
+     
+        // Check if this board state has been explored before
+        pthread_mutex_lock(&hash_table->mutex);
+        if (task_exists_in_hash_table(hash_table, task->task_id)) {
             pthread_mutex_unlock(&hash_table->mutex);
-
-
-
-            // Now process the task
-            int solved = solve(task->sudoku);
-            if (solved) {
-                pthread_mutex_lock(&solution_mutex);
-                if (!solution_found) {
-                    deque->found_by_thread = 1;
-                    solution_found = true; // Set the global termination flag
-                    solved_sudoku = deep_copy_sudoku(task->sudoku);
-                }
-                pthread_mutex_unlock(&solution_mutex);
-                free_task(task);
-                break; // Exit the loop after solving
-            }
-            free_task(task); // Clean up memory
+            free_task(task);
+            continue;
         }
+        
+        // Add to hash table
+        insert_task_to_hash_table(hash_table, task);
+        pthread_mutex_unlock(&hash_table->mutex);
+        
+        // Call the modified solve function that can create additional tasks
+        if (solve(task->sudoku, deque, 0)) {
+            pthread_mutex_lock(&solution_mutex);
+            if (!solution_found) {
+                solution_found = true;
+                deque->found_by_thread = 1;
+                solved_sudoku = deep_copy_sudoku(task->sudoku);
+            }
+            pthread_mutex_unlock(&solution_mutex);
+            free_task(task);
+            break;
+        }
+
+
+        free_task(task);
     }
     return NULL;
 }
@@ -307,17 +348,37 @@ coord_t first_empty_cell(Sudoku *sudoku) {
 
 int is_valid_placement(Sudoku *sudoku, int r, int c, int num) {
     int len = sudoku->len;
-    int i;
-
-    for (i = 0; i < len - 1; i++) {
-        if (num == sudoku->grid[r * len + c].row_peers[i]->value ||
-            num == sudoku->grid[r * len + c].col_peers[i]->value ||
-            num == sudoku->grid[r * len + c].box_peers[i]->value) {
-            return 0; // Invalid placement
+    int base = sudoku->base;
+    
+    // Check row constraints
+    int row, col, box_r, box_c;
+    for (col = 0; col < len; col++) {
+        if (col != c && sudoku->grid[r * len + col].value == num) {
+            return 0; // Found same number in row
         }
     }
+    
+    // Check column constraints
+    for (row = 0; row < len; row++) {
+        if (row != r && sudoku->grid[row * len + c].value == num) {
+            return 0; // Found same number in column
+        }
+    }
+    
+    // Check box constraints
+    int box_row_start = (r / base) * base;
+    int box_col_start = (c / base) * base;
 
-    return 1; // Valid placement
+    
+    for (box_r = box_row_start; box_r < box_row_start + base; box_r++) {
+        for (box_c = box_col_start; box_c < box_col_start + base; box_c++) {
+            if ((box_r != r || box_c != c) && sudoku->grid[box_r * len + box_c].value == num) {
+                return 0; // Found same number in box
+            }
+        }
+    }
+    
+    return 1; // Valid placement - no conflicts found
 }
 
 int fully_solved_board(Sudoku *sudoku) {
