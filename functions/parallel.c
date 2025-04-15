@@ -105,22 +105,17 @@ Task *deque_pop(WorkDeque *deque) {
     pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
     return task;
 }
-
 Task *deque_steal(WorkDeque *deque) {
-    pthread_mutex_lock(&deque->mutex); // Lock the mutex
-
-    int t = deque->top; // Remove atomic load
+    pthread_mutex_lock(&deque->mutex);
+    int t = deque->top;
     int b = deque->bottom;
-
     Task *task = NULL;
-    if (t < b) { // Tasks available
+    if (t < b) {
         task = deque->tasks[t % DEQUE_SIZE];
-
-        // Try to steal the task (update top)
-        deque->top = t + 1;    // Update top (no atomic CAS)
-        deque->num_tasks -= 1; // Decrement num_tasks
+        deque->tasks[t % DEQUE_SIZE] = NULL; // Mark as taken
+        deque->top = t + 1;
+        deque->num_tasks -= 1;
     }
-
-    pthread_mutex_unlock(&deque->mutex); // Unlock the mutex
+    pthread_mutex_unlock(&deque->mutex);
     return task;
 }

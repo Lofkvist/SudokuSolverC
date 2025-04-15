@@ -1,9 +1,9 @@
 # Configuration
-BOARD_BASE := 6  # Options: 5, 6, 8
+BOARD_BASE := 5  # Options: 5, 6, 8
 CC := gcc
-CFLAGS := -O3 -pg -Wall -lpthread -fopenmp
+CFLAGS := -O3 -Wall -lpthread -fopenmp
 TARGET := main
-SRC_FILES := main.c functions/init_sudoku.c functions/display_functions.c functions/parallel.c functions/task_hash.c
+SRC_FILES := main.c functions/*.c
 
 # Default target
 all: $(TARGET)
