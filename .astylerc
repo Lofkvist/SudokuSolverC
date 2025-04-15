@@ -1,0 +1,21 @@
+# Indentation
+--indent=spaces=4
+--indent-switches
+--indent-cases
+--indent-col1-comments
+# Brackets and Blocks
+--style=attach
+--break-blocks
+--pad-oper
+--pad-comma
+# Formatting
+--align-pointer=type
+--align-reference=type
+--max-code-length=120
+--keep-one-line-blocks
+--keep-one-line-statements
+# Misc
+--mode=c
+# --add-braces  # Removed to allow single-line statements without braces
+--attach-namespaces
+--break-one-line-headers

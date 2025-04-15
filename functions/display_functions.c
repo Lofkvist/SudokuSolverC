@@ -1,14 +1,6 @@
 #include "init_sudoku.h"
 #include <stdio.h>
 
-void print_binary(uint_fast64_t num, int len) {
-    // Print the bits from the highest bit (63) to the lowest bit (0)
-    for (int i = len - 1; i >= 0; i--) {
-        putchar((num & (1ULL << i)) ? '1' : '0');
-    }
-    printf(" ");
-}
-
 void print_sudoku(Sudoku *sudoku) {
     int len = sudoku->len;
     int i, j;

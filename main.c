@@ -1,52 +1,18 @@
-
 #include "functions/display_functions.h"
-#include "functions/init_sudoku.h"
 #include "functions/explored_states.h"
-#include "functions/parallel.h"
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include "functions/init_sudoku.h"
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include <omp.h> // For omp_get_wtime
 
-#include <stdatomic.h>
-#include <pthread.h>
-#include <omp.h>
-
-struct timespec ts = {0, 50000000};
-struct timespec start, end;
-
-bool solution_found = false; // Will be accessed using atomic operations
-Sudoku* volatile solved_sudoku_atomic = NULL; // Will be accessed using atomic operations
-
-
-/*
-Future improvements
-- Set numbers directly in init_sudoku instead of in another functions
-- Parallelize
-- Change to more optimal types (eg uint_fast8_t)
-- Place memory allocations closer together? Both the grid itself and all
-pointers to peers
-- Improve init_cell_peers? Mutual pointers?
-- Vectorize all for loops
-*/
-
-/*
-- Select the empty cell with the fewest options
-- Backtracking solver
-*/
-
-// Shared to enable stealing
-WorkDeque *deques;
-Sudoku *solved_sudoku = NULL; // This will store the solution
-ExploredValues* explored_values;
-
+// Global variables for sharing work and solution
 typedef struct {
-    Sudoku *sudoku;
-    int thread_id;
-    int total_threads;
-} ThreadArgs;
+    Sudoku* board;
+    int depth;
+} Task;
 
 typedef struct coord {
     int r;
@@ -54,224 +20,391 @@ typedef struct coord {
     int found;
 } coord_t;
 
-coord_t first_empty_cell(Sudoku *sudoku);
+// Simple thread-safe work queue
+typedef struct {
+    Task** tasks;
+    int capacity;
+    int size;
+    int head;
+    int tail;
+    pthread_mutex_t lock;
+    pthread_cond_t not_empty;  // New condition variable
+} WorkQueue;
 
-int is_valid_placement(Sudoku *sudoku, int r, int c, int num);
+// Global shared variables
+WorkQueue* work_queue;
+Sudoku* solved_sudoku = NULL;
+int solution_found = 0;
+pthread_mutex_t solution_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-int is_valid_board(Sudoku *sudoku);
+// Thread argument structure
+typedef struct {
+    int thread_id;
+    int depth_limit;
+} ThreadArg;
 
-int solve2(Sudoku *sudoku);
+// Function declarations
+void parallel_sudoku_solver(Sudoku* sudoku, int num_threads, int depth_limit);
+void* worker_thread(void* arg);
+int solve_sequential(Sudoku* sudoku);
+int serial_solve(Sudoku* sudoku);
+coord_t first_empty_cell(Sudoku* sudoku);
+Sudoku* deep_copy_sudoku(Sudoku* parent);
 
-int solve(Sudoku *sudoku, WorkDeque *deque, int depth);
+int is_valid_placement(Sudoku* sudoku, int row, int col, int num);
+int check_row(Sudoku* sudoku, int r, int c, int num);
+int check_col(Sudoku* sudoku, int r, int c, int num);
+int check_box(Sudoku* sudoku, int r, int c, int num);
 
-int fully_solved_board(Sudoku *sudoku);
+// Main function - just initialize and start the solver
 
-int solve_sequential(Sudoku *sudoku, int depth);
-void *solver_thread(void *arg);
-int check_row(Sudoku *sudoku, int r, int c, int num);
-int check_col(Sudoku *sudoku, int r, int c, int num);
-int check_box(Sudoku *sudoku, int r, int c, int num);
-
-void *worker_thread(void *arg);
-void parallel_sudoku_solver(Sudoku *initial_sudoku, int N_THREADS);
-Task *steal_from_other_deques(int N_THREADS, int thread_id);
-
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("Usage: <BASE>");
+int main(int argc, char* argv[]) {
+    if (argc != 4) {
+        printf("Usage: %s <BASE> <NUM_THREADS> <BACKTRACK_RECURSIVE_DEPTH_LIMIT>\n", argv[0]);
         return 1;
     }
-    int base = strtoull(argv[1], NULL, 10);
-    printf("Side length:          %d\n", base * base);
 
-    const int TOTAL_THREADS = 8;
-    const int NUM_PTHREADS = TOTAL_THREADS;
-    //omp_set_num_threads(0);
-
-    double elapsed_time;
-    clock_gettime(CLOCK_MONOTONIC, &start);
-    Sudoku *sudoku = init_sudoku(base);
-
-    explored_values = init_explored_values(sudoku->len);
-
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    elapsed_time =
-        (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    printf("Initialization time: %12.9f seconds\n", elapsed_time);
-
-    clock_gettime(CLOCK_MONOTONIC, &start);
     
-    print_sudoku(sudoku);
-    parallel_sudoku_solver(sudoku, NUM_PTHREADS);
-    print_sudoku(sudoku);
+    int base = atoi(argv[1]);
+    int num_threads = atoi(argv[2]);
+    int depth_limit = atoi(argv[3]);
 
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    elapsed_time =
-        (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    
+    // Initialize sudoku
+    Sudoku* sudoku1 = init_sudoku(base);
+    Sudoku* sudoku2 = init_sudoku(base);
 
-    if (solved_sudoku == NULL) {
-        printf("No solution found.\n");
-        printf("Solved correctly? No\n");
+    // Solve using parallel approach
+    double p_start, p_end, s_start, s_end;
+
+    p_start = omp_get_wtime();
+    parallel_sudoku_solver(sudoku1, num_threads, depth_limit);
+    p_end = omp_get_wtime();
+
+    s_start = omp_get_wtime();
+    int solved = serial_solve(sudoku2);
+    s_end = omp_get_wtime();
+
+
+    double elapsed_p = p_end - p_start;
+    printf("Parallel implementation: \n");
+
+    if (solved_sudoku != NULL) {
+        printf("Execution time:  %lf \n", p_end - p_start);
+        printf("------------------ \n");
     } else {
-        printf("Solve time: %.9f seconds\n", elapsed_time);
-        printf("Solved correctly? %5d\n", fully_solved_board(solved_sudoku));
+        printf("No solution found.\n");
     }
 
-    free_explored_values(explored_values);
-    free_sudoku(sudoku);
-    return 0;
-}
+    double elapsed_s = s_end - s_start;
+    printf("------------------ \n");
+    printf("Serial implementation: \n");
 
-int solve(Sudoku *sudoku, WorkDeque *deque, int depth) {
-    if (__sync_bool_compare_and_swap(&solution_found, false, true)) {
-        Sudoku* copied_solution = deep_copy_sudoku(sudoku);
-        __sync_synchronize();  // Memory barrier
-        solved_sudoku_atomic = copied_solution;
+    if (solved) {
+        printf("Execution time:  %lf \n", s_end - s_start);
+        printf("------------------ \n");
+    } else {
+        printf("No solution found.\n");
+        printf("------------------ \n");
     }
 
-    coord_t pos = first_empty_cell(sudoku);
-    if (pos.found == 0) return 1;
-
-    int r = pos.r, c = pos.c, len = sudoku->len;
-    int max_parallel_depth = (len <= 16) ? 2 : (len <= 36) ? 3 : 4;
-
-    // Parallel tasks section
-    if (depth <= max_parallel_depth) {
-        int valid_options[len + 1];
-        int valid_count = 0;
-
-        for (int num = 1; num <= len; num++) {
-            // Check global explored state
-            if (!is_value_tried(explored_values, r, c, num) && is_valid_placement(sudoku, r, c, num)) {
-                valid_options[valid_count++] = num;
-            }
-        }
-
-        if (valid_count > 1) {
-            int chunk_size = (depth == 0 && len > 25) ? 2 : 1;
-
-            sudoku->grid[r * len + c].value = valid_options[0];
-            mark_value_tried(explored_values, r, c, valid_options[0]);
-
-            for (int i = 1; i < valid_count; i += chunk_size) {
-                Task *new_task = create_task(sudoku);
-                new_task->sudoku->grid[r * len + c].value = valid_options[i];
-                mark_value_tried(explored_values, r, c, valid_options[i]);
-                deque_push(deque, new_task);
-            }
-
-            if (solve(sudoku, deque, depth + 1)) return 1;
-            sudoku->grid[r * len + c].value = 0;
-            return 0;
-        }
+    if (solved && solution_found) {
+        printf("Speedup: %lf\n", elapsed_s / elapsed_p);
     }
 
-    // Sequential backtracking section
-    for (int num = 1; num <= len; num++) {
-        // Also check global explored state here
-        if (!is_value_tried(explored_values, r, c, num) && is_valid_placement(sudoku, r, c, num)) {
-            mark_value_tried(explored_values, r, c, num);
-            sudoku->grid[r * len + c].value = num;
-            if (solve(sudoku, deque, depth + 1)) return 1;
-            sudoku->grid[r * len + c].value = 0;
-        }
+
+    // Cleanup
+    free_sudoku(sudoku1);
+    free_sudoku(sudoku2);
+
+    if (solved_sudoku != NULL && solved_sudoku != sudoku1) {
+        free_sudoku(solved_sudoku);
     }
 
     return 0;
 }
 
-int solve_sequential(Sudoku *sudoku, int depth) {
-    if (solution_found) return 0;
+// Initialize work queue
+WorkQueue* create_work_queue(int capacity) {
+    WorkQueue* queue = malloc(sizeof(WorkQueue));
+    queue->tasks = malloc(sizeof(Task*) * capacity);
+    queue->capacity = capacity;
+    queue->size = 0;
+    queue->head = 0;
+    queue->tail = 0;
+    pthread_mutex_init(&queue->lock, NULL);
+    pthread_cond_init(&queue->not_empty, NULL);  // Initialize condition
+    return queue;
+}
 
-    coord_t pos = first_empty_cell(sudoku);
-    if (!pos.found) return 1;
+// Add task to work queue
+int queue_push(WorkQueue* queue, Task* task) {
+    int result = 0;
+    pthread_mutex_lock(&queue->lock);
 
-    for (int num = 1; num <= sudoku->len; num++) {
-        if (!is_value_tried(explored_values, pos.r, pos.c, num) &&
-                is_valid_placement(sudoku, pos.r, pos.c, num)) {
+    if (queue->size < queue->capacity) {
+        queue->tasks[queue->tail] = task;
+        queue->tail = (queue->tail + 1) % queue->capacity;
+        queue->size++;
+        result = 1;
 
-            mark_value_tried(explored_values, pos.r, pos.c, num);
-            sudoku->grid[pos.r * sudoku->len + pos.c].value = num;
-
-            if (solve_sequential(sudoku, depth + 1)) return 1;
-
-            sudoku->grid[pos.r * sudoku->len + pos.c].value = 0;
+        if (queue->size == 1) {  // Queue was empty, now has an item
+            pthread_cond_broadcast(&queue->not_empty);  // Wake up waiting threads
         }
     }
 
-    return 0;
+    pthread_mutex_unlock(&queue->lock);
+    return result;
 }
 
-void parallel_sudoku_solver(Sudoku *initial_sudoku, int N_THREADS) {
-    pthread_t threads[N_THREADS];
-    ThreadArgs args[N_THREADS];
+Task* queue_pop(WorkQueue* queue) {
+    Task* task = NULL;
+    int found = 0;
 
-    // Launch worker threads with different starting positions
-    for (int i = 0; i < N_THREADS; i++) {
-        args[i].sudoku = deep_copy_sudoku(initial_sudoku);
+    // First check if solution is found (always check solution_mutex first)
+    pthread_mutex_lock(&solution_mutex);
+    found = solution_found;
+    pthread_mutex_unlock(&solution_mutex);
+
+    if (found)
+        return NULL;
+
+    // Then acquire queue lock
+    pthread_mutex_lock(&queue->lock);
+
+    while (queue->size == 0) {
+        pthread_cond_wait(&queue->not_empty, &queue->lock);
+
+        // Check if solution was found while waiting
+        pthread_mutex_unlock(&queue->lock);
+        pthread_mutex_lock(&solution_mutex);
+        found = solution_found;
+        pthread_mutex_unlock(&solution_mutex);
+
+        if (found) {
+            return NULL;
+        }
+
+        pthread_mutex_lock(&queue->lock);
+    }
+
+    // Pop task from queue
+    task = queue->tasks[queue->head];
+    queue->head = (queue->head + 1) % queue->capacity;
+    queue->size--;
+
+    pthread_mutex_unlock(&queue->lock);
+    return task;
+}
+
+
+// Main solver function that creates threads and distributes work
+void parallel_sudoku_solver(Sudoku* sudoku, int num_threads, int depth_limit) {
+    pthread_t threads[num_threads];
+    ThreadArg args[num_threads];
+
+    // Create work queue
+    work_queue = create_work_queue(1000);
+
+    // Create initial task and add to queue
+    Task* initial_task = malloc(sizeof(Task));
+    initial_task->board = sudoku;
+    initial_task->depth = 0;
+    queue_push(work_queue, initial_task);
+
+    // Create worker threads
+    for (int i = 0; i < num_threads; i++) {
         args[i].thread_id = i;
-        args[i].total_threads = N_THREADS;
-        pthread_create(&threads[i], NULL, solver_thread, &args[i]);
+        args[i].depth_limit = depth_limit;
+        pthread_create(&threads[i], NULL, worker_thread, &args[i]);
     }
 
-    // Join threads
-    for (int i = 0; i < N_THREADS; i++) {
+    // Wait for all threads to finish
+    for (int i = 0; i < num_threads; i++) {
         pthread_join(threads[i], NULL);
     }
 
-    // Get solution
-    solved_sudoku = solved_sudoku_atomic;
+    // Clean up
+    free(work_queue->tasks);
+    // After joining threads:
+    pthread_cond_destroy(&work_queue->not_empty);
+    free(work_queue);
 }
 
-void *solver_thread(void *arg) {
-    ThreadArgs *args = (ThreadArgs*)arg;
-    Sudoku *sudoku = args->sudoku;
-    int thread_id = args->thread_id;
+// Worker thread function
+void* worker_thread(void* arg) {
+    coord_t cell;
+    int row, col;
+    ThreadArg* thread_arg = (ThreadArg*)arg;
+    int thread_id = thread_arg->thread_id;
 
-    // Find empty cells
-    coord_t pos = first_empty_cell(sudoku);
-    if (pos.found) {
-        // Each thread tries different values based on thread ID
-        for (int num = 1; num <= sudoku->len; num++) {
-            // Skip this value if not for this thread
-            if (num % args->total_threads != thread_id) continue;
 
-            // Skip if already tried
-            if (is_value_tried(explored_values, pos.r, pos.c, num)) continue;
+    // Per-thread activity counters
+    long tasks_processed = 0;
+    long idle_cycles = 0;
 
-            if (is_valid_placement(sudoku, pos.r, pos.c, num)) {
-                mark_value_tried(explored_values, pos.r, pos.c, num);
-                sudoku->grid[pos.r * sudoku->len + pos.c].value = num;
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 100000;  // 100 microseconds = 100,000 nanoseconds
 
-                if (solve_sequential(sudoku, 1)) {
-                    if (__sync_bool_compare_and_swap(&solution_found, false, true)) {
-                        solved_sudoku_atomic = sudoku;
+    while (1) {
+        // Check if solution was already found
+        pthread_mutex_lock(&solution_mutex);
+        int found = solution_found;
+        pthread_mutex_unlock(&solution_mutex);
+
+        if (found)
+            break;
+
+        // Get task from queue (will wait efficiently if queue is empty)
+        Task* task = queue_pop(work_queue);
+
+        if (task == NULL) {
+            idle_cycles++;
+            nanosleep(&ts, NULL);
+            continue;
+        }
+
+        // Task was found - record active time
+        tasks_processed++;
+
+        if (task->depth < thread_arg->depth_limit) {
+            cell = first_empty_cell(task->board);
+            row = cell.r;
+            col = cell.c;
+
+            if (cell.found) {
+                for (int num = 1; num <= task->board->len; num++) {
+                    if (is_valid_placement(task->board, row, col, num)) {
+                        Sudoku* new_board = deep_copy_sudoku(task->board);
+                        new_board->grid[row * new_board->len + col].value = num;
+
+                        // Update bitmasks in the new board
+                        unsigned long long bit = 1ULL << (num - 1);
+                        int box = (row / new_board->base) * new_board->base + (col / new_board->base);
+                        new_board->row_bits[row] |= bit;
+                        new_board->col_bits[col] |= bit;
+                        new_board->box_bits[box] |= bit;
+
+                        Task* new_task = malloc(sizeof(Task));
+                        new_task->board = new_board;
+                        new_task->depth = task->depth + 1;
+
+                        queue_push(work_queue, new_task);
                     }
-                    return NULL;
+                }
+            }
+        } else {
+            if (solve_sequential(task->board)) {
+                pthread_mutex_lock(&solution_mutex);
+
+                if (!solution_found) {
+                    solution_found = 1;
+                    solved_sudoku = deep_copy_sudoku(task->board);
+
+                    pthread_mutex_lock(&work_queue->lock);
+                    pthread_cond_broadcast(&work_queue->not_empty);
+                    pthread_mutex_unlock(&work_queue->lock);
                 }
 
-                sudoku->grid[pos.r * sudoku->len + pos.c].value = 0;
+                pthread_mutex_unlock(&solution_mutex);
             }
         }
+
+        if (task->depth > 0) {
+            free_sudoku(task->board);
+        }
+
+        free(task);
     }
 
-    free_sudoku(sudoku);
+    // Report statistics
+    printf("Thread %d: processed %ld tasks, idle cycles: %ld (%.2f%%)\n",
+           thread_id, tasks_processed, idle_cycles,
+           (double)idle_cycles / (idle_cycles + tasks_processed) * 100);
+
     return NULL;
 }
-Task *steal_from_other_deques(int N_THREADS, int thread_id) {
-    // Generate random starting point
-    int start = rand() % N_THREADS;
-    for (int i = 0; i < N_THREADS - 1; i++) {
-        int steal_deque_id = (start + i) % N_THREADS;
-        if (steal_deque_id != thread_id) {
-            Task *task = deque_steal(&deques[steal_deque_id]);
-            if (task) return task;
+
+
+int solve_sequential(Sudoku* sudoku) {
+    pthread_mutex_lock(&solution_mutex);
+    int found = solution_found;
+    pthread_mutex_unlock(&solution_mutex);
+
+    if (found)
+        return 0;
+
+    coord_t pos = first_empty_cell(sudoku);
+
+    if (!pos.found)
+        return 1;  // Board is full, solution found!
+
+    for (int num = 1; num <= sudoku->len; num++) {
+        if (is_valid_placement(sudoku, pos.r, pos.c, num)) {
+            // Try this value
+            sudoku->grid[pos.r * sudoku->len + pos.c].value = num;
+
+            // Update bitmasks
+            unsigned long long bit = 1ULL << (num - 1);
+            int box = (pos.r / sudoku->base) * sudoku->base + (pos.c / sudoku->base);
+            sudoku->row_bits[pos.r] |= bit;
+            sudoku->col_bits[pos.c] |= bit;
+            sudoku->box_bits[box] |= bit;
+
+            if (solve_sequential(sudoku))
+                return 1;
+
+            // Backtrack
+            sudoku->grid[pos.r * sudoku->len + pos.c].value = 0;
+
+            // Update bitmasks (clear the bits)
+            sudoku->row_bits[pos.r] &= ~bit;
+            sudoku->col_bits[pos.c] &= ~bit;
+            sudoku->box_bits[box] &= ~bit;
         }
     }
-    return NULL;
+
+    return 0;
 }
 
-coord_t first_empty_cell(Sudoku *sudoku) {
+
+// Sequential solver function (standard backtracking)
+int serial_solve(Sudoku* sudoku) {
+    coord_t pos = first_empty_cell(sudoku);
+
+    if (!pos.found)
+        return 1;
+
+    for (int num = 1; num <= sudoku->len; num++) {
+        if (is_valid_placement(sudoku, pos.r, pos.c, num)) {
+            // Place the number
+            sudoku->grid[pos.r * sudoku->len + pos.c].value = num;
+
+            // Update bitmasks
+            unsigned long long bit = 1ULL << (num - 1);
+            int box = (pos.r / sudoku->base) * sudoku->base + (pos.c / sudoku->base);
+            sudoku->row_bits[pos.r] |= bit;
+            sudoku->col_bits[pos.c] |= bit;
+            sudoku->box_bits[box] |= bit;
+
+            if (serial_solve(sudoku))
+                return 1;
+
+            // Backtrack: remove the number
+            sudoku->grid[pos.r * sudoku->len + pos.c].value = 0;
+
+            // Update bitmasks (clear the bits)
+            sudoku->row_bits[pos.r] &= ~bit;
+            sudoku->col_bits[pos.c] &= ~bit;
+            sudoku->box_bits[box] &= ~bit;
+        }
+    }
+
+    return 0;
+}
+
+coord_t first_empty_cell(Sudoku* sudoku) {
     coord_t pos;
     pos.c = 0;
     pos.r = 0;
@@ -279,6 +412,7 @@ coord_t first_empty_cell(Sudoku *sudoku) {
     int len = sudoku->len;
 
     int r, c;
+
     for (r = 0; r < len; r++) {
         for (c = 0; c < len; c++) {
             if (sudoku->grid[r * len + c].value == 0) {
@@ -289,89 +423,62 @@ coord_t first_empty_cell(Sudoku *sudoku) {
             }
         }
     }
+
     return pos;
 }
 
-int is_valid_placement(Sudoku *sudoku, int r, int c, int num) {
-    return check_row(sudoku, r, c, num) &&
-           check_col(sudoku, r, c, num) &&
-           check_box(sudoku, r, c, num);
+// Check whether num can be placed in cell (r,c)
+int is_valid_placement(Sudoku* sudoku, int r, int c, int num) {
+    unsigned long long bit = 1ULL << (num - 1);
+    int box = (r / sudoku->base) * sudoku->base + (c / sudoku->base);
+
+    // If bit is set in any constraint, placement is invalid
+    return !(sudoku->row_bits[r] & bit ||
+             sudoku->col_bits[c] & bit ||
+             sudoku->box_bits[box] & bit);
 }
 
-int check_row(Sudoku *sudoku, int r, int c, int num) {
-    int len = sudoku->len;
-    int col;
-    int *row = &sudoku->grid[r * len].value;
+Sudoku* deep_copy_sudoku(Sudoku* parent) {
+    Sudoku* child = malloc(sizeof(Sudoku));
 
-    for (col = 0; col < c; ++col) {
-        if (row[col] == num) {
-            return 0; // Found same number in row
-        }
-    }
-    for (col = c + 1; col < len; ++col) {
-        if (row[col] == num) {
-            return 0; // Found same number in row
-        }
-    }
-    return 1;
-}
-
-int check_col(Sudoku *sudoku, int r, int c, int num) {
-    int len = sudoku->len;
-
-    // Check rows before r
-    for (int row = 0; row < r; row++) {
-        if (sudoku->grid[row * len + c].value == num) {
-            return 0;
-        }
+    if (!child) {
+        return NULL;
     }
 
-    // Check rows after r
-    for (int row = r + 1; row < len; row++) {
-        if (sudoku->grid[row * len + c].value == num) {
-            return 0;
-        }
+    child->base = parent->base;
+    child->len = parent->len;
+    int len = child->len;
+
+    // Allocate grid memory
+    size_t grid_size = len * len * sizeof(Cell);
+    child->grid = malloc(grid_size);
+
+    if (!child->grid) {
+        free(child);
+        return NULL;
     }
 
-    return 1;
-}
+    // Fast copy all cells at once
+    memcpy(child->grid, parent->grid, grid_size);
 
-int check_box(Sudoku *sudoku, int r, int c, int num) {
-    int len = sudoku->len;
-    int base = sudoku->base;
-    int box_row_start = (r / base) * base;
-    int box_col_start = (c / base) * base;
-    int box_row_end = box_row_start + base;
-    int box_col_end = box_col_start + base;
-    int row, col;
+    // Allocate and copy bitmasks
+    child->row_bits = malloc(len * sizeof(unsigned long long));
+    child->col_bits = malloc(len * sizeof(unsigned long long));
+    child->box_bits = malloc(len * sizeof(unsigned long long));
 
-    for (row = box_row_start; row < box_row_end; row++) {
-        for (col = box_col_start; col < box_col_end; col++) {
-            // Skip the cell we're checking
-            if (row == r && col == c) {
-                continue;
-            }
-
-            if (sudoku->grid[row * len + col].value == num) {
-                return 0;  // Found conflict
-            }
-        }
+    if (!child->row_bits || !child->col_bits || !child->box_bits) {
+        free(child->grid);
+        free(child->row_bits);
+        free(child->col_bits);
+        free(child->box_bits);
+        free(child);
+        return NULL;
     }
 
-    return 1;  // No conflicts
-}
+    // Copy bitmasks
+    memcpy(child->row_bits, parent->row_bits, len * sizeof(unsigned long long));
+    memcpy(child->col_bits, parent->col_bits, len * sizeof(unsigned long long));
+    memcpy(child->box_bits, parent->box_bits, len * sizeof(unsigned long long));
 
-
-int fully_solved_board(Sudoku *sudoku) {
-    int len = sudoku->len;
-    int r, c;
-    for (r = 0; r < sudoku->len; r++) {
-        for (c = 0; c < sudoku->len; c++) {
-            int val = sudoku->grid[r * len + c].value;
-            if (val == 0 || !is_valid_placement(sudoku, r, c, val)) {
-                return 0; // Either unfilled or invalid cell
-            }
-        }
-    }
-    return 1;
+    return child;
 }

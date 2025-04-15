@@ -1,8 +1,7 @@
 // sudoku.h
 #ifndef SUDOKU_H
 #define SUDOKU_H
-
-#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 typedef struct Cell{
@@ -13,18 +12,13 @@ typedef struct {
     int base;
     int len;
     Cell *grid;
+    
+    // Add bitmasks for fast validity checking
+    unsigned long long *row_bits;  // Bit flags for each row
+    unsigned long long *col_bits;  // Bit flags for each column
+    unsigned long long *box_bits;  // Bit flags for each box
 } Sudoku;
 
-/*
-Initialize a board of size NxN
-
-Initial clues are taken from the binary file boards/board_DxD.dat, where D = N*N
-*/
 Sudoku *init_sudoku(int N);
-
-/*
-Free all allocated memory
-*/
 void free_sudoku(Sudoku *sudoku);
-
 #endif // SUDOKU_H

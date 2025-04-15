@@ -5,11 +5,12 @@
 #include <stdlib.h>
 
 #define DEQUE_SIZE 1024  // Can be adjusted based on problem size
-
+/*
 typedef struct {
     Sudoku* sudoku;
     uint32_t task_id;
 } Task;
+*/
 
 Sudoku *deep_copy_sudoku(Sudoku *parent);
 Task *create_task(Sudoku *parent);

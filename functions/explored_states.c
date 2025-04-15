@@ -4,17 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-ExploredValues* init_explored_values(int len){
-    ExploredValues *explored = malloc(sizeof(ExploredValues));
-    int total_len = len*len;
-    explored->len = len;
-    explored->locks = malloc(len*sizeof(pthread_mutex_t));
-    explored->tried = calloc(total_len, sizeof(uint_fast64_t));
+void init_explored_values(ExploredValues* explored_states, int len){
+    explored_states->len = len;
+    explored_states->locks = malloc(len*sizeof(pthread_mutex_t));
+    explored_states->tried = calloc(len*len, sizeof(uint_fast64_t));
 
     for (int i = 0; i < len; i++) {
-        pthread_mutex_init(&explored->locks[i], NULL);
+        pthread_mutex_init(&explored_states->locks[i], NULL);
     }
-    return explored;
 }
 
 // Check if a value has been tried

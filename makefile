@@ -1,9 +1,11 @@
 # Configuration
-BOARD_BASE := 5  # Options: 5, 6, 8
+BOARD_BASE := 6  # Options: 5, 6, 8
+NUM_THREADS := 8
+DEPTH_LIMIT := 12
 CC := gcc
 CFLAGS := -O3 -Wall -lpthread -fopenmp
 TARGET := main
-SRC_FILES := main.c functions/*.c
+SRC_FILES := main.c functions/display_functions.c functions/init_sudoku.c functions/explored_states.c
 
 # Default target
 all: $(TARGET)
@@ -14,7 +16,7 @@ $(TARGET): $(SRC_FILES)
 
 # Run the program with configured board base
 run: $(TARGET)
-	./$(TARGET) $(BOARD_BASE)
+	./$(TARGET) $(BOARD_BASE) $(NUM_THREADS) $(DEPTH_LIMIT)
 
 # Clean build artifacts
 clean:

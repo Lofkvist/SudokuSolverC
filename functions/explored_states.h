@@ -7,7 +7,7 @@ typedef struct {
     pthread_mutex_t *locks;  // Array of locks for fine-grained locking
 } ExploredValues;
 
-ExploredValues* init_explored_values(int len);
+void init_explored_values(ExploredValues* explored_states, int len);
 int is_value_tried(ExploredValues *explored, int row, int col, int value);
 void mark_value_tried(ExploredValues *explored, int row, int col, int value);
 void free_explored_values(ExploredValues *explored);
