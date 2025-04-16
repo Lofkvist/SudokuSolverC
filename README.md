@@ -23,7 +23,10 @@ This project implements both serial and parallel algorithms for solving Sudoku p
 
 ```bash
 make
+```
+
 
 ## Usage
 ```bash
 ./main <BASE> <N_THREADS> <RECURSIVE_DEPTH_LIMIT> <MIN_TASKS_IN_QUEUE> <TASK_BATCH_SIZE>
+```
