@@ -76,7 +76,7 @@ void queue_push_batch(WorkQueue* queue, Task** tasks, uint32_t count) {
     
     // Clean up tasks that didn't fit
     for (i = added; i < count; i++) {
-        free_sudoku(tasks[i]->board);
+        free_sudoku(tasks[i]->grid);
         free(tasks[i]);
     }
 }

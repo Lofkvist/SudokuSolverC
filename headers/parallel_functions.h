@@ -22,7 +22,7 @@ extern atomic_int solution_found;
 /**
  * Creates and manages multiple threads for parallel sudoku solving
  *
- * @param sudoku Initial sudoku board to solve
+ * @param sudoku Initial sudoku grid to solve
  * @param num_threads Number of worker threads to create
  * @param depth_limit Maximum recursion depth before switching to backtracking
  * @param queue_count_minimum Minimum number of tasks to maintain in queue
@@ -46,7 +46,7 @@ void* worker_thread(void* arg);
  * Recursive backtracking algorithm used by worker threads
  * Checks global solution status to avoid redundant work
  *
- * @param sudoku Sudoku board to solve
+ * @param sudoku Sudoku grid to solve
  * @return 1 if solution found, 0 otherwise
  */
  uint8_t worker_backtrack(Sudoku* sudoku);

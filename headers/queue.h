@@ -8,7 +8,7 @@
 
 // Task structure
 typedef struct {
-    Sudoku* board;
+    Sudoku* grid;
     int depth;
 } Task;
 
@@ -61,6 +61,6 @@ void queue_push_batch(WorkQueue* queue, Task** tasks, uint32_t count);
  * @param threshold Minimum desired number of tasks
  * @return 1 if queue size is below threshold, 0 otherwise
  */
- uint8_t queue_is_low(WorkQueue* queue, uint32_t threshold);
+uint8_t queue_is_low(WorkQueue* queue, uint32_t threshold);
 
 #endif /* WORK_QUEUE_H */

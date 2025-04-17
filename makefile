@@ -1,8 +1,8 @@
 # These options apply when running ´make run´
 BOARD_BASE := 6  # Options: 5, 6, 8
 NUM_THREADS := 8
-DEPTH_LIMIT := 50
-MINIMUM_TASK_COUNT := 100
+DEPTH_LIMIT := 30
+MINIMUM_TASK_COUNT := 200
 BATCH_SIZE = 200
 
 CC := gcc

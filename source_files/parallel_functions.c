@@ -23,7 +23,7 @@ void parallel_sudoku_solver(Sudoku* sudoku,
 
     // Create initial task and add to queue
     Task* initial_task = malloc(sizeof(Task));
-    initial_task->board = sudoku;
+    initial_task->grid = sudoku;
     initial_task->depth = 0;
 
     Task* batch[1] = {initial_task};
@@ -74,7 +74,7 @@ void* worker_thread(void* arg) {
         }
 
         if (task->depth < thread_arg->depth_limit || queue_is_low(work_queue, thread_arg->queue_count_minimum)) {
-            cell = first_empty_cell(task->board);
+            cell = first_empty_cell(task->grid);
             row = cell.r;
             col = cell.c;
 
@@ -83,13 +83,13 @@ void* worker_thread(void* arg) {
                 Task* batch[thread_arg->batch_size];
                 int batch_count = 0;
 
-                for (num = 1; num <= task->board->len; num++) {
-                    if (is_valid_placement(task->board, row, col, num)) {
-                        Sudoku* new_board = deep_copy_sudoku(task->board);
-                        set_cell(new_board, row, col, num);
+                for (num = 1; num <= task->grid->len; num++) {
+                    if (is_valid_placement(task->grid, row, col, num)) {
+                        Sudoku* new_grid = deep_copy_sudoku(task->grid);
+                        set_cell(new_grid, row, col, num);
 
                         Task* new_task = malloc(sizeof(Task));
-                        new_task->board = new_board;
+                        new_task->grid = new_grid;
                         new_task->depth = task->depth + 1;
 
                         batch[batch_count++] = new_task;
@@ -109,12 +109,12 @@ void* worker_thread(void* arg) {
             }
         } else {
             // Try backtracking solution
-            if (worker_backtrack(task->board)) {
+            if (worker_backtrack(task->grid)) {
                 int expected = 0;
 
                 if (atomic_compare_exchange_strong(&solution_found, &expected, 1)) {
                     // Save solution and wake waiting threads
-                    solved_sudoku = deep_copy_sudoku(task->board);
+                    solved_sudoku = deep_copy_sudoku(task->grid);
 
                     pthread_mutex_lock(&work_queue->lock);
                     pthread_cond_broadcast(&work_queue->not_empty);
@@ -125,7 +125,7 @@ void* worker_thread(void* arg) {
 
         // Clean up
         if (task->depth > 0) {
-            free_sudoku(task->board);
+            free_sudoku(task->grid);
         }
 
         free(task);

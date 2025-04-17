@@ -32,7 +32,7 @@ Sudoku* deep_copy_sudoku(Sudoku* parent);
 
 /**
  * Initialize a Sudoku puzzle with the given base size.
- * Loads the puzzle from a board file.
+ * Loads the puzzle from a grid file.
  * 
  * @param N The base size of the Sudoku (e.g., 3 for a standard 9x9 puzzle)
  * @return A pointer to the initialized Sudoku structure or NULL on failure
@@ -66,10 +66,18 @@ void set_cell(Sudoku* sudoku, uint8_t row, uint8_t col, uint8_t num);
 void clear_cell(Sudoku* sudoku, uint8_t row, uint8_t col);
 
 /**
- * Print the current state of the Sudoku board to the console.
+ * Print the current state of the Sudoku grid to the console.
  * 
  * @param sudoku Pointer to the Sudoku structure
  */
 void print_sudoku(Sudoku *sudoku);
+
+/**
+ * Checks if a completed Sudoku puzzle is valid
+ *
+ * @param sudoku Pointer to the Sudoku structure
+ * @return 1 if grid is completly filled and valid, 0 if not
+ */
+ uint8_t is_valid_sudoku(Sudoku* sudoku);
 
 #endif // SUDOKU_UTILS_H
