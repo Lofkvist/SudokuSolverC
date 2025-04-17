@@ -20,7 +20,7 @@ coord_t first_empty_cell(Sudoku* sudoku);
  * @param num Number to check (1-len)
  * @return 1 if placement is valid, 0 otherwise
  */
-int is_valid_placement(Sudoku* sudoku, int r, int c, int num);
+ uint8_t is_valid_placement(Sudoku* sudoku, uint8_t r, uint8_t c, uint8_t num);
 
 /**
  * Create a deep copy of a Sudoku structure.
@@ -37,7 +37,7 @@ Sudoku* deep_copy_sudoku(Sudoku* parent);
  * @param N The base size of the Sudoku (e.g., 3 for a standard 9x9 puzzle)
  * @return A pointer to the initialized Sudoku structure or NULL on failure
  */
-Sudoku* init_sudoku(int N);
+Sudoku* init_sudoku(uint8_t N);
 
 /**
  * Free all memory associated with a Sudoku puzzle.
@@ -54,7 +54,7 @@ void free_sudoku(Sudoku* sudoku);
  * @param col Column index
  * @param num Value to set (1-len)
  */
-void set_cell(Sudoku* sudoku, int row, int col, int num);
+void set_cell(Sudoku* sudoku, uint8_t row, uint8_t col, uint8_t num);
 
 /**
  * Clear a cell's value and update all corresponding bitmasks.
@@ -63,7 +63,7 @@ void set_cell(Sudoku* sudoku, int row, int col, int num);
  * @param row Row index
  * @param col Column index
  */
-void clear_cell(Sudoku* sudoku, int row, int col);
+void clear_cell(Sudoku* sudoku, uint8_t row, uint8_t col);
 
 /**
  * Print the current state of the Sudoku board to the console.

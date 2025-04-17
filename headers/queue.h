@@ -15,10 +15,10 @@ typedef struct {
 // Thread-safe work queue
 typedef struct {
     Task** tasks;
-    int capacity;
-    int size;
-    int head;
-    int tail;
+    uint32_t capacity;
+    uint32_t size;
+    uint32_t head;
+    uint32_t tail;
     pthread_mutex_t lock;
     pthread_cond_t not_empty;
 } WorkQueue;
@@ -35,7 +35,7 @@ extern pthread_mutex_t solution_mutex;
  * @param capacity Maximum number of tasks the queue can hold
  * @return Pointer to the new queue
  */
-WorkQueue* create_work_queue(int capacity);
+WorkQueue* create_work_queue(uint32_t capacity);
 
 /**
  * Pops a task from the front of the queue
@@ -52,7 +52,7 @@ Task* queue_pop(WorkQueue* queue);
  * @param tasks Array of task pointers
  * @param count Number of tasks in the batch
  */
-void queue_push_batch(WorkQueue* queue, Task** tasks, int count);
+void queue_push_batch(WorkQueue* queue, Task** tasks, uint32_t count);
 
 /**
  * Checks if the queue size is below a given threshold
@@ -61,6 +61,6 @@ void queue_push_batch(WorkQueue* queue, Task** tasks, int count);
  * @param threshold Minimum desired number of tasks
  * @return 1 if queue size is below threshold, 0 otherwise
  */
-int queue_is_low(WorkQueue* queue, int threshold);
+ uint8_t queue_is_low(WorkQueue* queue, uint32_t threshold);
 
 #endif /* WORK_QUEUE_H */

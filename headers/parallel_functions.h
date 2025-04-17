@@ -29,10 +29,10 @@ extern atomic_int solution_found;
  * @param batch_size Size of task batches for queue operations
  */
 void parallel_sudoku_solver(Sudoku* sudoku,
-                           int num_threads,
-                           int depth_limit,
-                           int queue_count_minimum,
-                           int batch_size);
+    int num_threads,
+    int depth_limit,
+    int queue_count_minimum,
+    int batch_size);
 
 /**
  * Thread function that processes tasks from the shared work queue
@@ -49,14 +49,6 @@ void* worker_thread(void* arg);
  * @param sudoku Sudoku board to solve
  * @return 1 if solution found, 0 otherwise
  */
-int worker_backtrack(Sudoku* sudoku);
-
-/**
- * Serial backtracking algorithm for comparison
- *
- * @param sudoku Sudoku board to solve
- * @return 1 if solution found, 0 otherwise
- */
-int serial_backtrack(Sudoku* sudoku);
+ uint8_t worker_backtrack(Sudoku* sudoku);
 
 #endif // PARALLEL_FUNCTIONS_H

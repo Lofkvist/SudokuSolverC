@@ -1,24 +1,22 @@
 #include "../headers/sudoku_types.h"
 #include <string.h>
+#include <stdint.h>
 
 /* Forward declaration for static functions */
 static void populate_board(Sudoku* sudoku);
 
 /**
- * Finds the first empty cell in the Sudoku grid
- */
+* Finds the first empty cell in the Sudoku grid
+*/
 coord_t first_empty_cell(Sudoku* sudoku) {
-    coord_t pos;
-    pos.c = 0;
-    pos.r = 0;
-    pos.found = 0;
-    int len = sudoku->len;
+    coord_t pos = {0, 0, 0};
+    uint8_t len = sudoku->len;
 
-    int r, c;
+    uint8_t r, c;
 
     for (r = 0; r < len; r++) {
         for (c = 0; c < len; c++) {
-            if (sudoku->grid[r * len + c].value == 0) {
+            if (sudoku->grid[r * len + c] == 0) {
                 pos.found = 1;
                 pos.r = r;
                 pos.c = c;
@@ -33,9 +31,9 @@ coord_t first_empty_cell(Sudoku* sudoku) {
 /**
  * Checks if placing a number in a specific cell is valid according to Sudoku rules
  */
-int is_valid_placement(Sudoku* sudoku, int r, int c, int num) {
+uint8_t is_valid_placement(Sudoku* sudoku, uint8_t r, uint8_t c, uint8_t num) {
     unsigned long long bit = 1ULL << (num - 1);
-    int box = (r / sudoku->base) * sudoku->base + (c / sudoku->base);
+    uint8_t box = (r / sudoku->base) * sudoku->base + (c / sudoku->base);
 
     // If bit is set in any constraint, placement is invalid
     return !(sudoku->row_bits[r] & bit ||
@@ -55,10 +53,10 @@ Sudoku* deep_copy_sudoku(Sudoku* parent) {
 
     child->base = parent->base;
     child->len = parent->len;
-    int len = child->len;
+    uint8_t len = child->len;
 
     // Allocate grid memory
-    size_t grid_size = len * len * sizeof(Cell);
+    int grid_size = len * len * sizeof(uint8_t);
     child->grid = malloc(grid_size);
 
     if (!child->grid) {
@@ -69,16 +67,14 @@ Sudoku* deep_copy_sudoku(Sudoku* parent) {
     // Fast copy all cells at once
     memcpy(child->grid, parent->grid, grid_size);
 
-    // Allocate and copy bitmasks
-    child->row_bits = malloc(len * sizeof(unsigned long long));
-    child->col_bits = malloc(len * sizeof(unsigned long long));
-    child->box_bits = malloc(len * sizeof(unsigned long long));
+    // One memory allocation for bitmasks
+    child->row_bits = malloc(3 * len * sizeof(unsigned long long));
+    child->col_bits = child->row_bits + len;
+    child->box_bits = child->row_bits + 2 * len;
 
     if (!child->row_bits || !child->col_bits || !child->box_bits) {
         free(child->grid);
         free(child->row_bits);
-        free(child->col_bits);
-        free(child->box_bits);
         free(child);
         return NULL;
     }
@@ -94,7 +90,7 @@ Sudoku* deep_copy_sudoku(Sudoku* parent) {
 /**
  * Initializes a new Sudoku puzzle with given base size and loads puzzle data
  */
-Sudoku* init_sudoku(int N) {
+Sudoku* init_sudoku(uint8_t N) {
     Sudoku* sudoku = malloc(sizeof(Sudoku));
 
     if (!sudoku)
@@ -102,26 +98,24 @@ Sudoku* init_sudoku(int N) {
 
     sudoku->base = N;
     sudoku->len = N * N;
-    int len = N * N;
+    uint8_t len = N * N;
 
     // Allocate grid
-    sudoku->grid = malloc(len * len * sizeof(Cell));
+    sudoku->grid = malloc(len * len * sizeof(uint8_t));
 
     if (!sudoku->grid) {
         free(sudoku);
         return NULL;
     }
 
-    // Allocate bitmasks
-    sudoku->row_bits = calloc(len, sizeof(unsigned long long));
-    sudoku->col_bits = calloc(len, sizeof(unsigned long long));
-    sudoku->box_bits = calloc(len, sizeof(unsigned long long));
+    // One memory allocation for bitmasks
+    sudoku->row_bits = calloc(3 * len, sizeof(unsigned long long));
+    sudoku->col_bits = sudoku->row_bits + len;
+    sudoku->box_bits = sudoku->row_bits + 2 * len;
 
     if (!sudoku->row_bits || !sudoku->col_bits || !sudoku->box_bits) {
         free(sudoku->grid);
         free(sudoku->row_bits);
-        free(sudoku->col_bits);
-        free(sudoku->box_bits);
         free(sudoku);
         return NULL;
     }
@@ -129,15 +123,18 @@ Sudoku* init_sudoku(int N) {
     populate_board(sudoku);
 
     // Initialize bit arrays based on initial board values
-    for (int r = 0; r < len; r++) {
-        for (int c = 0; c < len; c++) {
-            int val = sudoku->grid[r * len + c].value;
+    uint8_t r, c, val, box;
+    unsigned long long bit;
+
+    for (r = 0; r < len; r++) {
+        for (c = 0; c < len; c++) {
+            val = sudoku->grid[r * len + c];
 
             if (val > 0) {
-                unsigned long long bit = 1ULL << (val - 1);
+                bit = 1ULL << (val - 1);
                 sudoku->row_bits[r] |= bit;
                 sudoku->col_bits[c] |= bit;
-                int box = (r / N) * N + (c / N);
+                box = (r / N) * N + (c / N);
                 sudoku->box_bits[box] |= bit;
             }
         }
@@ -152,8 +149,6 @@ Sudoku* init_sudoku(int N) {
 void free_sudoku(Sudoku* sudoku) {
     free(sudoku->grid);
     free(sudoku->row_bits);
-    free(sudoku->col_bits);
-    free(sudoku->box_bits);
     free(sudoku);
 }
 
@@ -162,8 +157,8 @@ void free_sudoku(Sudoku* sudoku) {
  */
 static void populate_board(Sudoku* sudoku) {
     char filename[40];
-    int len = sudoku->len;
-    Cell* grid = sudoku->grid;
+    uint8_t len = sudoku->len;
+    uint8_t* grid = sudoku->grid;
 
     // Assuming placed in ./boards directory
     snprintf(filename, sizeof(filename), "boards/board_%dx%d.dat", len, len);
@@ -191,9 +186,10 @@ static void populate_board(Sudoku* sudoku) {
     }
 
     fclose(file);
+    int i;
 
-    for (int i = 0; i < len * len; i++) {
-        grid[i].value = (int)data[i];
+    for (i = 0; i < len * len; i++) {
+        grid[i] = (uint8_t)data[i];
     }
 
     // Close the file
@@ -204,12 +200,12 @@ static void populate_board(Sudoku* sudoku) {
  * Prints the current state of the Sudoku board to the console
  */
 void print_sudoku(Sudoku* sudoku) {
-    int len = sudoku->len;
+    uint8_t len = sudoku->len;
     int i, j;
 
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
-            printf("%2d ", sudoku->grid[i * len + j].value);
+            printf("%2d ", sudoku->grid[i * len + j]);
         }
 
         printf("\n");
@@ -219,15 +215,15 @@ void print_sudoku(Sudoku* sudoku) {
 /**
  * Sets a value in a cell and updates all corresponding bitmasks
  */
-void set_cell(Sudoku* sudoku, int row, int col, int num) {
+void set_cell(Sudoku* sudoku, uint8_t row, uint8_t col, uint8_t num) {
     // Set the value in the grid
-    sudoku->grid[row * sudoku->len + col].value = num;
+    sudoku->grid[row * sudoku->len + col] = num;
 
     // Create bitmask with a 1 in the position for this number
     unsigned long long bit = 1ULL << (num - 1);
 
     // Calculate box index
-    int box = (row / sudoku->base) * sudoku->base + (col / sudoku->base);
+    uint8_t box = (row / sudoku->base) * sudoku->base + (col / sudoku->base);
 
     // Update all three bitmasks
     sudoku->row_bits[row] |= bit;
@@ -238,18 +234,18 @@ void set_cell(Sudoku* sudoku, int row, int col, int num) {
 /**
  * Clears a cell's value and updates all corresponding bitmasks
  */
-void clear_cell(Sudoku* sudoku, int row, int col) {
-    int current_value = sudoku->grid[row * sudoku->len + col].value;
+void clear_cell(Sudoku* sudoku, uint8_t row, uint8_t col) {
+    uint8_t current_value = sudoku->grid[row * sudoku->len + col];
 
     unsigned long long bit = 1ULL << (current_value - 1);
 
     // Calculate box index
-    int box = (row / sudoku->base) * sudoku->base + (col / sudoku->base);
+    uint8_t box = (row / sudoku->base) * sudoku->base + (col / sudoku->base);
 
     // Clear the bits in all three bitmasks
     sudoku->row_bits[row] &= ~bit;
     sudoku->col_bits[col] &= ~bit;
     sudoku->box_bits[box] &= ~bit;
 
-    sudoku->grid[row * sudoku->len + col].value = 0;
+    sudoku->grid[row * sudoku->len + col] = 0;
 }

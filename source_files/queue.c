@@ -7,7 +7,7 @@
 /**
  * Creates a new work queue with specified capacity
  */
-WorkQueue* create_work_queue(int capacity) {
+WorkQueue* create_work_queue(uint32_t capacity) {
     WorkQueue* queue = malloc(sizeof(WorkQueue));
     queue->tasks = malloc(sizeof(Task*) * capacity);
     queue->capacity = capacity;
@@ -54,12 +54,13 @@ Task* queue_pop(WorkQueue* queue) {
 /**
  * Adds multiple tasks to the queue in a single operation
  */
-void queue_push_batch(WorkQueue* queue, Task** tasks, int count) {
+void queue_push_batch(WorkQueue* queue, Task** tasks, uint32_t count) {
     pthread_mutex_lock(&queue->lock);
     
     // Add tasks to queue
-    int added = 0;
-    for (int i = 0; i < count && queue->size < queue->capacity; i++) {
+    uint8_t added = 0;
+    int i;
+    for (i = 0; i < count && queue->size < queue->capacity; i++) {
         queue->tasks[queue->tail] = tasks[i];
         queue->tail = (queue->tail + 1) % queue->capacity;
         queue->size++;
@@ -74,7 +75,7 @@ void queue_push_batch(WorkQueue* queue, Task** tasks, int count) {
     pthread_mutex_unlock(&queue->lock);
     
     // Clean up tasks that didn't fit
-    for (int i = added; i < count; i++) {
+    for (i = added; i < count; i++) {
         free_sudoku(tasks[i]->board);
         free(tasks[i]);
     }
@@ -83,8 +84,8 @@ void queue_push_batch(WorkQueue* queue, Task** tasks, int count) {
 /**
  * Checks if the queue size is below a given threshold
  */
-int queue_is_low(WorkQueue* queue, int threshold) {
-    int size;
+ uint8_t queue_is_low(WorkQueue* queue, uint32_t threshold) {
+    uint32_t size;
     pthread_mutex_lock(&queue->lock);
     size = queue->size;
     pthread_mutex_unlock(&queue->lock);
