@@ -160,7 +160,7 @@ static void populate_grid(Sudoku* sudoku) {
     uint8_t* grid = sudoku->grid;
 
     // Assuming placed in ./grids directory
-    snprintf(filename, sizeof(filename), "grids/grids_%dx%d.dat", len, len);
+    snprintf(filename, sizeof(filename), "grids/grid_%dx%d.dat", len, len);
     FILE* file = fopen(filename, "rb");
 
     if (!file) {

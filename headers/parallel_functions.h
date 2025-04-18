@@ -11,6 +11,7 @@ typedef struct {
     int thread_id;
     int depth_limit;
     int queue_count_minimum;
+    int num_threads;
     int batch_size;
 } ThreadArg;
 
@@ -29,10 +30,11 @@ extern atomic_int solution_found;
  * @param batch_size Size of task batches for queue operations
  */
 void parallel_sudoku_solver(Sudoku* sudoku,
-    int num_threads,
-    int depth_limit,
-    int queue_count_minimum,
-    int batch_size);
+    uint8_t num_threads,
+    uint32_t depth_limit,
+    uint32_t queue_count_minimum,
+    uint32_t batch_size
+    );
 
 /**
  * Thread function that processes tasks from the shared work queue
@@ -47,8 +49,9 @@ void* worker_thread(void* arg);
  * Checks global solution status to avoid redundant work
  *
  * @param sudoku Sudoku grid to solve
+ * @param depth recursive depth
  * @return 1 if solution found, 0 otherwise
  */
- uint8_t worker_backtrack(Sudoku* sudoku);
+ uint8_t worker_backtrack(Sudoku* sudoku, uint32_t depth);
 
 #endif // PARALLEL_FUNCTIONS_H

@@ -1,8 +1,8 @@
 # These options apply when running ´make run´
 BOARD_BASE := 6  # Options: 5, 6, 8
 NUM_THREADS := 8
-DEPTH_LIMIT := 30
-MINIMUM_TASK_COUNT := 200
+DEPTH_SWITCHING_POINT := 70
+MINIMUM_TASK_COUNT := 500
 BATCH_SIZE = 200
 
 CC := gcc
@@ -15,11 +15,11 @@ all: $(TARGET)
 
 # Compile the main program
 $(TARGET): $(SRC_FILES)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 # Run the program with configured board base
 run: $(TARGET)
-	./$(TARGET) $(BOARD_BASE) $(NUM_THREADS) $(DEPTH_LIMIT) $(MINIMUM_TASK_COUNT) $(BATCH_SIZE)
+	./$(TARGET) $(BOARD_BASE) $(NUM_THREADS) $(DEPTH_SWITCHING_POINT) $(MINIMUM_TASK_COUNT) $(BATCH_SIZE)
 
 # Clean build artifacts
 clean:

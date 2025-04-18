@@ -21,10 +21,14 @@ int serial_backtrack(Sudoku* sudoku);
 int main(int argc, char* argv[]) {
     // Check command line arguments
     if (argc != 6) {
-        printf("Usage: %s <BASE> <N_THREADS> <RECURSIVE_DEPTH_LIMIT> <MIN_TASKS_IN_QUEUE> <TASK_BATCH_SIZE>\n",
-               argv[0]);
+        printf("Usage: %s <BASE> \n"
+        "              <N_THREADS> \n"
+        "              <DEPTH_SWITCHING_POINT> \n"
+        "              <MIN_TASKS_IN_QUEUE> \n"
+        "              <TASK_BATCH_SIZE> \n", argv[0]);
         return 1;
     }
+    
 
     // Parse command line arguments
     uint8_t base = atoi(argv[1]);
@@ -39,7 +43,11 @@ int main(int argc, char* argv[]) {
 
     // ---------- Parallel Implementation ----------
     double p_start = omp_get_wtime();
-    parallel_sudoku_solver(sudoku_p, num_threads, depth_limit, queue_count_minimum, batch_size);
+    parallel_sudoku_solver(sudoku_p,
+                           num_threads,
+                           depth_limit,
+                           queue_count_minimum,
+                           batch_size);
     double p_end = omp_get_wtime();
     double elapsed_p = p_end - p_start;
 

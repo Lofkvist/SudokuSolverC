@@ -4,17 +4,20 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <stdatomic.h>
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 
 /**
  * Creates and manages multiple threads for parallel sudoku solving
  */
 void parallel_sudoku_solver(Sudoku* sudoku,
-                            int num_threads,
-                            int depth_limit,
-                            int queue_count_minimum,
-                            int batch_size) {
+                            uint8_t num_threads,
+                            uint32_t depth_limit,
+                            uint32_t queue_count_minimum,
+                            uint32_t batch_size) {
     pthread_t threads[num_threads];
     ThreadArg args[num_threads];
 
@@ -37,6 +40,7 @@ void parallel_sudoku_solver(Sudoku* sudoku,
         args[i].depth_limit = depth_limit;
         args[i].queue_count_minimum = queue_count_minimum;
         args[i].batch_size = batch_size;
+        args[i].num_threads = num_threads;
         pthread_create(&threads[i], NULL, worker_thread, &args[i]);
     }
 
@@ -54,6 +58,7 @@ void parallel_sudoku_solver(Sudoku* sudoku,
 /**
  * Thread function that processes tasks from the shared work queue
  */
+
 void* worker_thread(void* arg) {
     coord_t cell;
     uint16_t row, col;
@@ -73,7 +78,9 @@ void* worker_thread(void* arg) {
             continue;
         }
 
-        if (task->depth < thread_arg->depth_limit || queue_is_low(work_queue, thread_arg->queue_count_minimum)) {
+        
+        if (task->depth < thread_arg->depth_limit
+                || queue_is_low(work_queue, thread_arg->queue_count_minimum)) {
             cell = first_empty_cell(task->grid);
             row = cell.r;
             col = cell.c;
@@ -109,7 +116,7 @@ void* worker_thread(void* arg) {
             }
         } else {
             // Try backtracking solution
-            if (worker_backtrack(task->grid)) {
+            if (worker_backtrack(task->grid, task->depth)) {
                 int expected = 0;
 
                 if (atomic_compare_exchange_strong(&solution_found, &expected, 1)) {
@@ -136,27 +143,32 @@ void* worker_thread(void* arg) {
 
 /**
  * Recursive backtracking algorithm used by worker threads
- */
-uint8_t worker_backtrack(Sudoku* sudoku) {
-    // Exit if solution already found
-    if (atomic_load(&solution_found))
-        return 0;
+ */// Modify the worker_backtrack function to accept and track depth
+uint8_t worker_backtrack(Sudoku* sudoku, uint32_t current_depth) {
+    coord_t cell = first_empty_cell(sudoku);
 
-    coord_t pos = first_empty_cell(sudoku);
+    // If no empty cell found, puzzle is solved
+    if (!cell.found) {
+        return 1;
+    }
 
-    if (!pos.found)
-        return 1;  // Solution found!
+    uint8_t row = cell.r;
+    uint8_t col = cell.c;
+    uint8_t num;
 
-    int num;
-
+    // Try each possible number in this cell
     for (num = 1; num <= sudoku->len; num++) {
-        if (is_valid_placement(sudoku, pos.r, pos.c, num)) {
-            set_cell(sudoku, pos.r, pos.c, num);
+        if (is_valid_placement(sudoku, row, col, num)) {
+            // Place the number and increment depth
+            set_cell(sudoku, row, col, num);
 
-            if (worker_backtrack(sudoku))
+            // Recursively solve the rest
+            if (worker_backtrack(sudoku, current_depth + 1)) {
                 return 1;
+            }
 
-            clear_cell(sudoku, pos.r, pos.c);
+            // If not solved, backtrack
+            clear_cell(sudoku, row, col);
         }
     }
 
