@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 /* Forward declaration for static functions */
-static void populate_grid(Sudoku* sudoku);
+static void populate_grid(Sudoku* sudoku, char *grid_filename);
 
 /**
 * Finds the first empty cell in the Sudoku grid
@@ -89,7 +89,7 @@ Sudoku* deep_copy_sudoku(Sudoku* parent) {
 /**
  * Initializes a new Sudoku puzzle with given base size and loads puzzle data
  */
-Sudoku* init_sudoku(uint8_t N) {
+Sudoku* init_sudoku(uint8_t N, char *grid_filename) {
     Sudoku* sudoku = malloc(sizeof(Sudoku));
 
     if (!sudoku)
@@ -119,7 +119,7 @@ Sudoku* init_sudoku(uint8_t N) {
         return NULL;
     }
 
-    populate_grid(sudoku);
+    populate_grid(sudoku, grid_filename);
 
     // Initialize bit arrays based on initial grid values
     uint8_t r, c, val, box;
@@ -154,13 +154,13 @@ void free_sudoku(Sudoku* sudoku) {
 /**
  * Loads puzzle data from a binary file into the Sudoku grid
  */
-static void populate_grid(Sudoku* sudoku) {
+static void populate_grid(Sudoku* sudoku, char *grid_filename) {
     char filename[40];
     uint8_t len = sudoku->len;
     uint8_t* grid = sudoku->grid;
 
     // Assuming placed in ./grids directory
-    snprintf(filename, sizeof(filename), "grids/grid_%dx%d.dat", len, len);
+    snprintf(filename, sizeof(filename), grid_filename, len, len);
     FILE* file = fopen(filename, "rb");
 
     if (!file) {

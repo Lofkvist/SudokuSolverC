@@ -24,17 +24,18 @@ void parallel_sudoku_solver(Sudoku* sudoku,
     // Create work queue
     work_queue = create_work_queue(1000 * depth_limit);
 
-    // Create initial task and add to queue
+    int i;
+
     Task* initial_task = malloc(sizeof(Task));
     initial_task->grid = sudoku;
     initial_task->depth = 0;
 
-    Task* batch[1] = {initial_task};
-    queue_push_batch(work_queue, batch, 1);
+    Task* tasks[] = { initial_task };
+    queue_push_batch(work_queue, tasks, 1);
+
+
 
     // Create worker threads
-    int i;
-
     for (i = 0; i < num_threads; i++) {
         args[i].thread_id = i;
         args[i].depth_limit = depth_limit;
@@ -78,7 +79,6 @@ void* worker_thread(void* arg) {
             continue;
         }
 
-        
         if (task->depth < thread_arg->depth_limit
                 || queue_is_low(work_queue, thread_arg->queue_count_minimum)) {
             cell = first_empty_cell(task->grid);
@@ -116,7 +116,7 @@ void* worker_thread(void* arg) {
             }
         } else {
             // Try backtracking solution
-            if (worker_backtrack(task->grid, task->depth)) {
+            if (worker_backtrack(task->grid)) {
                 int expected = 0;
 
                 if (atomic_compare_exchange_strong(&solution_found, &expected, 1)) {
@@ -144,7 +144,7 @@ void* worker_thread(void* arg) {
 /**
  * Recursive backtracking algorithm used by worker threads
  */// Modify the worker_backtrack function to accept and track depth
-uint8_t worker_backtrack(Sudoku* sudoku, uint32_t current_depth) {
+uint8_t worker_backtrack(Sudoku* sudoku) {
     coord_t cell = first_empty_cell(sudoku);
 
     // If no empty cell found, puzzle is solved
@@ -163,7 +163,7 @@ uint8_t worker_backtrack(Sudoku* sudoku, uint32_t current_depth) {
             set_cell(sudoku, row, col, num);
 
             // Recursively solve the rest
-            if (worker_backtrack(sudoku, current_depth + 1)) {
+            if (worker_backtrack(sudoku)) {
                 return 1;
             }
 

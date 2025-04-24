@@ -52,6 +52,6 @@ void* worker_thread(void* arg);
  * @param depth recursive depth
  * @return 1 if solution found, 0 otherwise
  */
- uint8_t worker_backtrack(Sudoku* sudoku, uint32_t depth);
+ uint8_t worker_backtrack(Sudoku* sudoku);
 
 #endif // PARALLEL_FUNCTIONS_H

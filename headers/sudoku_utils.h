@@ -34,10 +34,10 @@ Sudoku* deep_copy_sudoku(Sudoku* parent);
  * Initialize a Sudoku puzzle with the given base size.
  * Loads the puzzle from a grid file.
  * 
- * @param N The base size of the Sudoku (e.g., 3 for a standard 9x9 puzzle)
+ * @param base The base size of the Sudoku (e.g., 3 for a standard 9x9 puzzle)
  * @return A pointer to the initialized Sudoku structure or NULL on failure
  */
-Sudoku* init_sudoku(uint8_t N);
+Sudoku* init_sudoku(uint8_t base, char *grid_filename);
 
 /**
  * Free all memory associated with a Sudoku puzzle.
