@@ -9,10 +9,11 @@
 // Thread argument structure
 typedef struct {
     int thread_id;
-    int depth_limit;
     int queue_count_minimum;
     int num_threads;
     int batch_size;
+    int base_depth;
+    double decay_rate;
 } ThreadArg;
 
 // Global variables
@@ -29,12 +30,10 @@ extern atomic_int solution_found;
  * @param queue_count_minimum Minimum number of tasks to maintain in queue
  * @param batch_size Size of task batches for queue operations
  */
-void parallel_sudoku_solver(Sudoku* sudoku,
+ void parallel_sudoku_solver(Sudoku* sudoku,
     uint8_t num_threads,
-    uint32_t depth_limit,
-    uint32_t queue_count_minimum,
-    uint32_t batch_size
-    );
+    uint32_t base_depth,
+    uint32_t queue_count_minimum);
 
 /**
  * Thread function that processes tasks from the shared work queue

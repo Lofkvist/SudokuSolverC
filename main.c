@@ -32,13 +32,12 @@ int count_zeros(Sudoku* sudoku) {
 // Main function - just initialize and start the solver
 int main(int argc, char* argv[]) {
     // Check command line arguments
-    if (argc != 7) {
+    if (argc != 6) {
         printf("Usage: %s <BASE> \n"
                "              <FILEPATH> \n"
-               "              <N_THREADS> \n"
-               "              <DEPTH_SWITCHING_POINT> \n"
-               "              <MIN_TASKS_IN_QUEUE> \n"
-               "              <TASK_BATCH_SIZE> \n", argv[0]);
+               "              <NUM_THREADS> \n"
+               "              <BASE_DEPTH> \n"
+               "              <MIN_TASKS_IN_QUEUE> \n", argv[0]);
         return 1;
     }
 
@@ -51,9 +50,8 @@ int main(int argc, char* argv[]) {
     grid_filename[255] = '\0'; // Ensure null-termination
 
     int num_threads = atoi(argv[3]);
-    int depth_limit = atoi(argv[4]);
+    int base_depth = atoi(argv[4]);
     int queue_count_minimum = atoi(argv[5]);
-    int batch_size = atoi(argv[6]);
 
     int verbose_performance_print = 0;
 
@@ -68,10 +66,9 @@ int main(int argc, char* argv[]) {
     // ---------- Parallel Implementation ----------
     double p_start = omp_get_wtime();
     parallel_sudoku_solver(sudoku_p,
-                           num_threads,
-                           depth_limit,
-                           queue_count_minimum,
-                           batch_size);
+                            num_threads,
+                            base_depth,
+                            queue_count_minimum);
     double p_end = omp_get_wtime();
     elapsed_p = p_end - p_start;
 

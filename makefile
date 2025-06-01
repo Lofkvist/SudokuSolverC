@@ -1,13 +1,13 @@
 # These options apply when running ´make run´
-BOARD_BASE := 6  # Options: 5, 6, 8
-FILENAME = "grids/grid_$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) )))x$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) ))).dat"
-NUM_THREADS := 16
-DEPTH_SWITCHING_POINT := 72
-MINIMUM_TASK_COUNT := 1700
-BATCH_SIZE = 1700
+BOARD_BASE := 6 # Options: 5, 6, 8
+FILENAME := "grids/grid_$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) )))x$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) ))).dat"
+NUM_THREADS := 8
+BASE_DEPTH := 70
+MINIMUM_TASK_COUNT := 2000
 
 CC := gcc
-CFLAGS := -O3 -Wall -lpthread -fopenmp -march=native -ffast-math
+CFLAGS := -O3 -Wall -march=native -ffast-math
+LIBS := -lm
 TARGET := main
 SRC_FILES := main.c source_files/*.c
 
@@ -20,7 +20,7 @@ $(TARGET): $(SRC_FILES)
 
 # Run the program with configured board base
 run: $(TARGET)
-	./$(TARGET) $(BOARD_BASE) $(FILENAME) $(NUM_THREADS) $(DEPTH_SWITCHING_POINT) $(MINIMUM_TASK_COUNT) $(BATCH_SIZE)
+	./$(TARGET) $(BOARD_BASE) $(FILENAME) $(NUM_THREADS) $(BASE_DEPTH) $(MINIMUM_TASK_COUNT)
 
 # Clean build artifacts
 clean:

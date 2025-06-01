@@ -54,6 +54,8 @@ Task* queue_pop(WorkQueue* queue);
  */
 void queue_push_batch(WorkQueue* queue, Task** tasks, uint32_t count);
 
+uint32_t queue_get_size(WorkQueue* queue);
+
 /**
  * Checks if the queue size is below a given threshold
  * 
