@@ -1,47 +1,69 @@
-#!/bin/bash
+#!/bin/bash -l
 
-BOARD_BASE=8
-NUM_THREADS=8
-LOGFILE="result_base8_74depth.log"
-RUNTIME_LOGFILE="result_base8.csv"
-NUM_RUNS=10
-TIMEOUT_SECONDS=30
+#SBATCH -A uppmax2025-2-247
+#SBATCH -p node
+#SBATCH -N 2
+#SBATCH -t 02:00:00
+#SBATCH -J sudoku_gridsearch
+#SBATCH -o slurm-%j.out
+#SBATCH -e slurm-%j.err
 
-echo "" > $LOGFILE # Clear previous log
-echo "BASE_DEPTH,MINIMUM_TASK_COUNT,RUN_NUMBER,RUNTIME" > $RUNTIME_LOGFILE # Create CSV header
+# --------------------------------------------------------
+# Configurable parameters
+# --------------------------------------------------------
 
-DEPTH_START=50
-DEPTH_END=300
+# Either pass BOARD_BASE as an argument to the script, or set a default
+BOARD_BASE=${1:-5}      # Default to 5 if not provided
+
+RUNTIME_LOGFILE="result_base${BOARD_BASE}.csv"
+NUM_RUNS=3
+TIMEOUT_SECONDS=60 # Quit executing after 1 min
+
+DEPTH_START=10
+DEPTH_END=200
 DEPTH_STEP=20
-DEPTH=74
 
-
-MIN_TASK_COUNT_START=10000
-MIN_TASK_COUNT_END=50000
-MIN_TASK_COUNT_STEP=2000
+MIN_TASK_COUNT_START=1
+MIN_TASK_COUNT_END=1000
+MIN_TASK_COUNT_STEP=100
 
 EXEC_PATH="../main" # Path to your executable
 GRID_FILENAME="../grids/grid_$(($BOARD_BASE * $BOARD_BASE))x$(($BOARD_BASE * $BOARD_BASE)).dat"
 
-    for MINIMUM_TASK_COUNT in $(seq $MIN_TASK_COUNT_START $MIN_TASK_COUNT_STEP $MIN_TASK_COUNT_END); do
-        echo "DEPTH=$DEPTH TASKS=$MINIMUM_TASK_COUNT" | tee -a $LOGFILE
+THREAD_LIST=(1 2 4 8 16 32)
 
-        for ((i = 1; i <= NUM_RUNS; i++)); do
-            echo " Run $i" | tee -a $LOGFILE
+# --------------------------------------------------------
+# Execution
+# --------------------------------------------------------
 
-            RUNTIME=$(timeout $TIMEOUT_SECONDS $EXEC_PATH \
-                $BOARD_BASE \
-                $GRID_FILENAME \
-                $NUM_THREADS \
-                $DEPTH \
-                $MINIMUM_TASK_COUNT)
+# Create CSV header
+echo "NUM_THREADS,BASE_DEPTH,MINIMUM_TASK_COUNT,RUN_NUMBER,RUNTIME" > $RUNTIME_LOGFILE
 
-            if [ $? -eq 124 ]; then
-                echo "Timeout exceeded ($TIMEOUT_SECONDS seconds)" | tee -a $LOGFILE
-                RUNTIME="nan"
-            fi
+for NUM_THREADS in "${THREAD_LIST[@]}"; do
+    for BASE_DEPTH in $(seq $DEPTH_START $DEPTH_STEP $DEPTH_END); do
+        for MINIMUM_TASK_COUNT in $(seq $MIN_TASK_COUNT_START $MIN_TASK_COUNT_STEP $MIN_TASK_COUNT_END); do
 
-            echo "$RUNTIME" | tee -a $LOGFILE
-            echo "$BASE_DEPTH,$MINIMUM_TASK_COUNT,$i,$RUNTIME" >> $RUNTIME_LOGFILE
+            for ((i = 1; i <= NUM_RUNS; i++)); do
+
+                echo "Running: Threads=$NUM_THREADS, Depth=$BASE_DEPTH, Tasks=$MINIMUM_TASK_COUNT, Run=$i"
+
+                # Run executable with timeout
+                RUNTIME=$(timeout $TIMEOUT_SECONDS $EXEC_PATH \
+                    $BOARD_BASE \
+                    $GRID_FILENAME \
+                    $NUM_THREADS \
+                    $BASE_DEPTH \
+                    $MINIMUM_TASK_COUNT)
+
+                if [ $? -eq 124 ]; then
+                    RUNTIME="nan"
+                    echo "Timeout for Threads=$NUM_THREADS Depth=$BASE_DEPTH Tasks=$MINIMUM_TASK_COUNT Run=$i"
+                fi
+
+                # Append result to CSV
+                echo "$NUM_THREADS,$BASE_DEPTH,$MINIMUM_TASK_COUNT,$i,$RUNTIME" >> $RUNTIME_LOGFILE
+
+            done
         done
     done
+done

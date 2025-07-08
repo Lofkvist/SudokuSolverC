@@ -81,7 +81,9 @@ void* worker_thread(void* arg) {
 
         // Get current queue size
         int current_queue_size = queue_get_size(work_queue);
-        if (current_queue_size < thread_arg->queue_count_minimum || task->depth < thread_arg->base_depth) {
+
+        // When the queue is small and the task is at a narrow depth
+        if (current_queue_size < thread_arg->queue_count_minimum && task->depth < thread_arg->base_depth) {
 
             cell = first_empty_cell(task->grid);
             row = cell.r;

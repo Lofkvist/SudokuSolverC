@@ -1,65 +1,86 @@
 import pandas as pd
-import re
+import matplotlib.pyplot as plt
 
-# Define the file path
-log_file = 'res.log'  # Replace with the path to your .log file
+# Läs CSV
+csv_file = './experiments/result_base5.csv'
+df = pd.read_csv(csv_file)
 
-# Initialize empty lists to store the parsed data
-depths = []
-tasks = []
-batches = []
-run_numbers = []
-times = []
-
-# Read the log file
-with open(log_file, 'r') as file:
-    lines = file.readlines()
-
-# Regular expression patterns to capture depth, tasks, batch, run, and time
-depth_task_batch_pattern = re.compile(r"DEPTH=(\d+) TASKS=(\d+) BATCH=(\d+)")
-run_pattern = re.compile(r"Run (\d+)")
-time_pattern = re.compile(r"(\d+\.\d{6})")
-
-# Iterate through the lines in the log file
-current_depth = current_tasks = current_batch = None
-
-for line in lines:
-    # Check for DEPTH, TASKS, BATCH information
-    match = depth_task_batch_pattern.search(line)
-    if match:
-        current_depth = int(match.group(1))
-        current_tasks = int(match.group(2))
-        current_batch = int(match.group(3))
-    
-    # Check for run number
-    run_match = run_pattern.search(line)
-    if run_match:
-        run_number = int(run_match.group(1))
-    
-    # Check for time information
-    time_match = time_pattern.search(line)
-    if time_match:
-        time_value = float(time_match.group(1))
-        
-        # Append data to lists
-        depths.append(current_depth)
-        tasks.append(current_tasks)
-        batches.append(current_batch)
-        run_numbers.append(run_number)
-        times.append(time_value)
-
-# Create a pandas DataFrame
-df = pd.DataFrame({
-    'DEPTH': depths,
-    'TASKS': tasks,
-    'BATCH': batches,
-    'Run': run_numbers,
-    'Time': times
+# Rename columns
+df = df.rename(columns={
+    'NUM_THREADS': 'THREADS',
+    'BASE_DEPTH': 'DEPTH',
+    'MINIMUM_TASK_COUNT': 'TASKS',
+    'RUN_NUMBER': 'Run',
+    'RUNTIME': 'Time'
 })
 
-# Display the DataFrame
-print(df)
+# --- DEPTH ---
+grouped_depth = df.groupby('DEPTH')['Time'].agg(['mean', 'var']).reset_index()
+print("Grouped by DEPTH:")
+print(grouped_depth)
 
-print("Smallest execution time:", df['Time'].min())
-print(df.loc[df['Time'].idxmin()])
+plt.errorbar(
+    grouped_depth['DEPTH'],
+    grouped_depth['mean'],
+    yerr=grouped_depth['var']**0.5,
+    fmt='-o'
+)
+plt.xlabel('DEPTH')
+plt.ylabel('Average Time (s)')
+plt.title('Average Execution Time per DEPTH')
+plt.grid(True)
+plt.savefig('./experiments/execution_time_per_depth.png', dpi=300)
+plt.clf()  # rensa figuren
 
+# Depth med lägst snitt-tid
+min_depth_row = grouped_depth.loc[grouped_depth['mean'].idxmin()]
+print("Depth with lowest average time:")
+print(min_depth_row)
+
+
+# --- TASKS ---
+grouped_tasks = df.groupby('TASKS')['Time'].agg(['mean', 'var']).reset_index()
+print("Grouped by TASKS:")
+print(grouped_tasks)
+
+plt.errorbar(
+    grouped_tasks['TASKS'],
+    grouped_tasks['mean'],
+    yerr=grouped_tasks['var']**0.5,
+    fmt='-o'
+)
+plt.xlabel('TASKS')
+plt.ylabel('Average Time (s)')
+plt.title('Average Execution Time per TASKS')
+plt.grid(True)
+plt.savefig('./experiments/execution_time_per_tasks.png', dpi=300)
+plt.clf()
+
+# Tasks med lägst snitt-tid
+min_tasks_row = grouped_tasks.loc[grouped_tasks['mean'].idxmin()]
+print("TASKS with lowest average time:")
+print(min_tasks_row)
+
+
+# --- THREADS ---
+grouped_threads = df.groupby('THREADS')['Time'].agg(['mean', 'var']).reset_index()
+print("Grouped by THREADS:")
+print(grouped_threads)
+
+plt.errorbar(
+    grouped_threads['THREADS'],
+    grouped_threads['mean'],
+    yerr=grouped_threads['var']**0.5,
+    fmt='-o'
+)
+plt.xlabel('NUM_THREADS')
+plt.ylabel('Average Time (s)')
+plt.title('Average Execution Time per NUM_THREADS')
+plt.grid(True)
+plt.savefig('./experiments/execution_time_per_threads.png', dpi=300)
+plt.clf()
+
+# Threads med lägst snitt-tid
+min_threads_row = grouped_threads.loc[grouped_threads['mean'].idxmin()]
+print("THREADS with lowest average time:")
+print(min_threads_row)

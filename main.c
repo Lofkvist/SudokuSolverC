@@ -8,6 +8,7 @@
 #include <omp.h> // For omp_get_wtime
 #include <stdatomic.h> // For atomic operations
 
+#define VERBOSE_PERFORMANCE_PRINT 0
 
 // Global shared variables
 WorkQueue* work_queue;
@@ -53,8 +54,6 @@ int main(int argc, char* argv[]) {
     int base_depth = atoi(argv[4]);
     int queue_count_minimum = atoi(argv[5]);
 
-    int verbose_performance_print = 0;
-
     // Initialize sudoku instances for parallel and serial solving
     Sudoku* sudoku_p = init_sudoku(base, grid_filename);
     Sudoku* sudoku_s = init_sudoku(base, grid_filename);
@@ -78,7 +77,7 @@ int main(int argc, char* argv[]) {
 
     // ---------- Serial Implementation ----------
 
-    if (verbose_performance_print) {
+    if (VERBOSE_PERFORMANCE_PRINT) {
         double s_start = omp_get_wtime();
         serial_solved = serial_backtrack(sudoku_s);
         double s_end = omp_get_wtime();
@@ -91,7 +90,7 @@ int main(int argc, char* argv[]) {
 
 
     // ---------- Performance Comparison ----------
-    if (verbose_performance_print) {
+    if (VERBOSE_PERFORMANCE_PRINT) {
         if (serial_solved && atomic_load(&solution_found)) {
             printf("======== Performance Summary ========\n");
             printf("Parallel: %.6f seconds\n", elapsed_p);
