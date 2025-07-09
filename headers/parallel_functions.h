@@ -13,7 +13,7 @@ typedef struct {
     int num_threads;
     int batch_size;
     int base_depth;
-    double decay_rate;
+    int len;
 } ThreadArg;
 
 // Global variables

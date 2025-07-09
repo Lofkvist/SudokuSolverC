@@ -40,6 +40,7 @@ void parallel_sudoku_solver(Sudoku* sudoku,
         args[i].queue_count_minimum = queue_count_minimum;
         args[i].num_threads = num_threads;
         args[i].base_depth = base_depth;
+        args[i].len = sudoku->len;
         pthread_create(&threads[i], NULL, worker_thread, &args[i]);
     }
 
@@ -65,7 +66,9 @@ void* worker_thread(void* arg) {
     uint16_t num;
     ThreadArg* thread_arg = (ThreadArg*)arg;
 
-    const int batch_size = thread_arg->queue_count_minimum / 3;
+    const int base_batch_size = 10;
+    const int batch_size = MAX(base_batch_size * thread_arg->len, thread_arg->queue_count_minimum / thread_arg->num_threads);
+
 
     while (1) {
         // Check if solution was already found
