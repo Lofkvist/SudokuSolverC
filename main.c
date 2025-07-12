@@ -20,6 +20,7 @@ int serial_backtrack(Sudoku* sudoku);
 
 int count_zeros(Sudoku* sudoku) {
     int counter = 0;
+
     for (int i = 0; i < sudoku->len; i++) {
         for (int j = 0; j < sudoku->len; j++) {
             if (sudoku->grid[i * sudoku->len + j] == 0) {
@@ -27,6 +28,7 @@ int count_zeros(Sudoku* sudoku) {
             }
         }
     }
+
     return counter;
 }
 
@@ -65,9 +67,9 @@ int main(int argc, char* argv[]) {
     // ---------- Parallel Implementation ----------
     double p_start = omp_get_wtime();
     parallel_sudoku_solver(sudoku_p,
-                            num_threads,
-                            base_depth,
-                            queue_count_minimum);
+                           num_threads,
+                           base_depth,
+                           queue_count_minimum);
     double p_end = omp_get_wtime();
     elapsed_p = p_end - p_start;
 

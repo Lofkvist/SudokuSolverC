@@ -1,31 +1,21 @@
 #!/bin/bash -l
 
-#SBATCH -A uppmax2025-2-247
-#SBATCH -p node
-#SBATCH -N 2
-#SBATCH -t 50:00:00
-#SBATCH -J sudoku_gridsearch
-#SBATCH -e error.log
-
-module load gcc
-make clean -C ..
-make -C ..
 # --------------------------------------------------------
 # Configurable parameters
 # --------------------------------------------------------
 
 # Either pass BOARD_BASE as an argument to the script, or set a default
-BOARD_BASE=8      # Default to 5 if not provided
+BOARD_BASE=6      # Default to 5 if not provided
 
-RUNTIME_LOGFILE="result_base${BOARD_BASE}.csv"
+RUNTIME_LOGFILE="vitsippa_base${BOARD_BASE}.csv"
 NUM_RUNS=1
-TIMEOUT_SECONDS=100 # Quit executing after 1 min
+TIMEOUT_SECONDS=5 # Quit executing after 5 min
 
-DEPTH_START=2
+DEPTH_START=75
 DEPTH_END=200
-DEPTH_STEP=10
+DEPTH_STEP=6
 
-MIN_TASK_COUNT_START=2
+MIN_TASK_COUNT_START=2000
 MIN_TASK_COUNT_END=5000
 MIN_TASK_COUNT_STEP=200
 
@@ -47,8 +37,6 @@ for NUM_THREADS in "${THREAD_LIST[@]}"; do
 
             for ((i = 1; i <= NUM_RUNS; i++)); do
 
-                echo "Running: Threads=$NUM_THREADS, Depth=$BASE_DEPTH, Tasks=$MINIMUM_TASK_COUNT, Run=$i"
-
                 # Run executable with timeout
                 RUNTIME=$(timeout $TIMEOUT_SECONDS $EXEC_PATH \
                     $BOARD_BASE \
@@ -59,7 +47,6 @@ for NUM_THREADS in "${THREAD_LIST[@]}"; do
 
                 if [ $? -eq 124 ]; then
                     RUNTIME="nan"
-                    echo "Timeout for Threads=$NUM_THREADS Depth=$BASE_DEPTH Tasks=$MINIMUM_TASK_COUNT Run=$i"
                 fi
 
                 # Append result to CSV

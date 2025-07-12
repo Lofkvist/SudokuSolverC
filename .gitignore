@@ -1,0 +1,5 @@
+# IDE / Editor folders
+.vscode/
+
+# Astyle settings or logs
+.astyle/

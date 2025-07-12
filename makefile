@@ -1,12 +1,16 @@
 # These options apply when running ´make run´
-BOARD_BASE := 6 # Options: 5, 6, 8
+BOARD_BASE := 8 # Options: 5, 6, 8
 FILENAME := "grids/grid_$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) )))x$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) ))).dat"
-NUM_THREADS := 8
-BASE_DEPTH := 74
-MINIMUM_TASK_COUNT := 5000
+NUM_THREADS := 16
+BASE_DEPTH := 105
+MINIMUM_TASK_COUNT := 2000
+
+# BASE_DEPTH=1, MINIMUM_TASK_COUNT=2200
+# BASE_DEPTH=153, MINIMUM_TASK_COUNT=2200
+# BASE_DEPTH=171, MINIMUM_TASK_COUNT=4400
 
 CC := gcc
-CFLAGS := -O3 -Wall -march=native -ffast-math -fopenmp
+CFLAGS := -O3 -Wall -march=native -ffast-math -fopenmp -fno-stack-protector
 LIBS := -lm
 TARGET := main
 SRC_FILES := main.c source_files/*.c
