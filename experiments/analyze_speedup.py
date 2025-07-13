@@ -133,6 +133,11 @@ def analyze_final_results(speedup_file, data_dir, final_dir, serial_times):
         grouped["ABSOLUTE_SPEEDUP"] = serial_runtime_fixed / grouped["MIN_RUNTIME"]
         grouped["NORMALIZED_SPEEDUP"] = measured_serial_runtime / grouped["MIN_RUNTIME"]
         grouped["EFFICIENCY"] = grouped["NORMALIZED_SPEEDUP"] / grouped["NUM_THREADS"]
+        
+        print(f"\n=== Results for n = {base} ===")
+        print(grouped.to_string(index=False))
+        print("\n")
+
 
         # Plot results
         plot_speedups_twin_axes(grouped, base, final_dir)

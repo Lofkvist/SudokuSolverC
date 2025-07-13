@@ -1,5 +1,5 @@
 # These options apply when running ´make run´
-BOARD_BASE := 8 # Options: 5, 6, 8
+BOARD_BASE := 6 # Options: 5, 6, 8
 FILENAME := "grids/grid_$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) )))x$(shell echo $$(( $(BOARD_BASE) * $(BOARD_BASE) ))).dat"
 NUM_THREADS := 16
 BASE_DEPTH := 105

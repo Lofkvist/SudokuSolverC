@@ -84,7 +84,6 @@ int main(int argc, char* argv[]) {
                            num_threads,
                            base_depth,
                            queue_count_minimum);
-
     double p_end = omp_get_wtime();
     elapsed_p = p_end - p_start;
 
@@ -144,7 +143,10 @@ int main(int argc, char* argv[]) {
             printf("===================================\n");
         }
     } else {
-        printf("%lf\n", elapsed_p);
+        uint8_t parallel_valid = is_valid_sudoku(solved_sudoku);
+        if (parallel_valid) {
+            printf("%f\n", elapsed_p);
+        }
     }
 
     // Clean up allocated memory
