@@ -4,34 +4,59 @@ import os
 
 # -------- FUNCTIONS --------
 
-def plot_speedup(df, base, out_dir, kind):
+def plot_speedups_twin_axes(df, base, out_dir):
     """
-    Plots either absolute or normalized speedup
+    Plots absolute and normalized speedup in the same figure with dual y-axes.
     """
-    plot_df = df.dropna(subset=[kind])
+
+    plot_df = df.dropna(subset=["ABSOLUTE_SPEEDUP", "NORMALIZED_SPEEDUP"])
 
     if plot_df.empty:
-        print(f"No data to plot {kind} speedup for base {base}. Skipping.")
+        print(f"No data to plot speedups for base {base}. Skipping.")
         return
 
     x_data = plot_df["NUM_THREADS"].values
-    y_data = plot_df[kind].values
-    
-    plot_text = "Absolute Speedup" if kind == "ABSOLUTE_SPEEDUP" else "Normalized Speedup"
+    abs_speedup = plot_df["ABSOLUTE_SPEEDUP"].values
+    norm_speedup = plot_df["NORMALIZED_SPEEDUP"].values
 
-    plt.figure()
-    plt.plot(x_data, y_data, marker='o', label=f"{plot_text}")
-    plt.xlabel("Number of Threads")
-    plt.ylabel("Speedup")
-    plt.xscale("log", base=2)
-    plt.title(f"Base = {base}: {plot_text} vs Number of Threads")
-    plt.grid()
-    plt.legend()
+    fig, ax1 = plt.subplots()
 
-    filename = f"base{base}_speedup_{kind}.png"
+    color1 = "tab:blue"
+    color2 = "tab:red"
+
+    ax1.set_xlabel("Number of Threads")
+    ax1.set_ylabel("Absolute Speedup", color=color1)
+    ax1.plot(
+        x_data,
+        abs_speedup,
+        marker='o',
+        color=color1,
+        label="Absolute Speedup"
+    )
+    ax1.tick_params(axis='y', labelcolor=color1)
+    ax1.set_xscale("log", base=2)
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("Normalized Speedup", color=color2)
+    ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
+    ax2.grid(False)  # Keep grid only on ax1, usually clearer
+    ax2.plot(
+        x_data,
+        norm_speedup,
+        marker='s',
+        color=color2,
+        label="Normalized Speedup"
+    )
+    ax2.tick_params(axis='y', labelcolor=color2)
+
+    plt.title(f"$n = {base}$: Absolute vs. Normalized Speedup")
+    fig.tight_layout()
+
+    filename = f"base{base}_speedup_ABS_and_NORM.png"
     out_path = os.path.join(out_dir, filename)
     plt.savefig(out_path)
     plt.close()
+
 
 
 def plot_efficiency(df, base, out_dir):
@@ -110,8 +135,8 @@ def analyze_final_results(speedup_file, data_dir, final_dir, serial_times):
         grouped["EFFICIENCY"] = grouped["NORMALIZED_SPEEDUP"] / grouped["NUM_THREADS"]
 
         # Plot results
-        plot_speedup(grouped, base, final_dir, "ABSOLUTE_SPEEDUP")
-        plot_speedup(grouped, base, final_dir, "NORMALIZED_SPEEDUP")
+        plot_speedups_twin_axes(grouped, base, final_dir)
+
         plot_efficiency(grouped, base, final_dir)
 
 
