@@ -25,8 +25,34 @@ This project implements both serial and parallel algorithms for solving Sudoku p
 make
 ```
 
-
 ## Usage
 ```bash
-./main <BASE> <N_THREADS> <RECURSIVE_DEPTH_LIMIT> <MIN_TASKS_IN_QUEUE> <TASK_BATCH_SIZE>
+./main <BASE> <GRID_FILENAME> <NUM_THREADS> <BASE_DEPTH> <MINIMUM_TASK_COUNT>
 ```
+
+#### Arguments:
+
+- `<BASE>` — Base size of one Sudoku box (e.g. 3 for 9×9)
+- `<GRID_FILENAME>` — Path to a binary grid file (e.g. `grids/grid_9x9.dat`)
+- `<NUM_THREADS>` — Number of worker threads
+- `<BASE_DEPTH>` — Recursion depth before switching to backtracking
+- `<MINIMUM_TASK_COUNT>` — Minimum number of tasks to keep in the work queue
+
+### Example
+
+```bash
+./main 6 grids/grid_36x36.dat 8 74 1000
+```
+
+## Requirements
+
+- POSIX-compliant OS (Linux, macOS)
+- GCC or compatible compiler supporting:
+    - C99 or newer
+    - OpenMP (for timing only)
+- Tested on:
+    - x86_64 Linux
+    - macOS (Apple Silicon)
+
+© 2025 Carl Löfkvist  
+Licensed under the MIT License.

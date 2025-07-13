@@ -1,3 +1,12 @@
+/* --------------------------------------------------------
+ * File:        main.c
+ * Author:      Carl Löfkvist
+ * Date:        2025-07-13
+ * Description: Reads a sudoku puzzle from input, solves it
+ *              using both serial and parallel backtracking
+ *              and writes execution time to stdout
+ * -------------------------------------------------------- */
+
 #include "headers/sudoku_utils.h"
 #include "headers/queue.h"
 #include "headers/parallel_functions.h"
@@ -5,8 +14,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <omp.h> // For omp_get_wtime
-#include <stdatomic.h> // For atomic operations
+#include <omp.h>          // For omp_get_wtime
+#include <stdatomic.h>    // For atomic operations
 
 #define VERBOSE_PERFORMANCE_PRINT 0
 
@@ -14,10 +23,13 @@
 WorkQueue* work_queue;
 Sudoku* solved_sudoku = NULL;
 atomic_int solution_found = ATOMIC_VAR_INIT(0);
-pthread_mutex_t solution_mutex = PTHREAD_MUTEX_INITIALIZER; // Needed for solved_sudoku
+pthread_mutex_t solution_mutex = PTHREAD_MUTEX_INITIALIZER; // Protects solved_sudoku
 
 int serial_backtrack(Sudoku* sudoku);
 
+/**
+ * Count number of empty cells in a Sudoku grid
+ */
 int count_zeros(Sudoku* sudoku) {
     int counter = 0;
 
@@ -32,7 +44,10 @@ int count_zeros(Sudoku* sudoku) {
     return counter;
 }
 
-// Main function - just initialize and start the solver
+
+/**
+ * Main function - initializes data and runs solvers
+ */
 int main(int argc, char* argv[]) {
     // Check command line arguments
     if (argc != 6) {
@@ -43,7 +58,6 @@ int main(int argc, char* argv[]) {
                "              <MIN_TASKS_IN_QUEUE> \n", argv[0]);
         return 1;
     }
-
 
     // Parse command line arguments
     uint8_t base = atoi(argv[1]);
@@ -63,22 +77,21 @@ int main(int argc, char* argv[]) {
     double elapsed_p = 0;
     int serial_solved;
 
-
     // ---------- Parallel Implementation ----------
     double p_start = omp_get_wtime();
+
     parallel_sudoku_solver(sudoku_p,
                            num_threads,
                            base_depth,
                            queue_count_minimum);
+
     double p_end = omp_get_wtime();
     elapsed_p = p_end - p_start;
 
     if (solved_sudoku == NULL)
         printf("No parallel solution found.\n\n");
 
-
     // ---------- Serial Implementation ----------
-
     if (VERBOSE_PERFORMANCE_PRINT) {
         double s_start = omp_get_wtime();
         serial_solved = serial_backtrack(sudoku_s);
@@ -87,9 +100,7 @@ int main(int argc, char* argv[]) {
 
         if (!serial_solved)
             printf("No serial solution found.\n\n");
-
     }
-
 
     // ---------- Performance Comparison ----------
     if (VERBOSE_PERFORMANCE_PRINT) {
@@ -136,8 +147,6 @@ int main(int argc, char* argv[]) {
         printf("%lf\n", elapsed_p);
     }
 
-
-
     // Clean up allocated memory
     free_sudoku(sudoku_p);
     free_sudoku(sudoku_s);
@@ -150,9 +159,10 @@ int main(int argc, char* argv[]) {
 }
 
 
-/*
-Sequential solver function (standard backtracking)
-*/
+/**
+ * Sequential solver function (standard backtracking)
+ * Returns 1 if solved, 0 otherwise
+ */
 int serial_backtrack(Sudoku* sudoku) {
     coord_t pos = first_empty_cell(sudoku);
     int num, box;
@@ -162,8 +172,6 @@ int serial_backtrack(Sudoku* sudoku) {
 
     for (num = 1; num <= sudoku->len; num++) {
         if (is_valid_placement(sudoku, pos.r, pos.c, num)) {
-
-
             // Set value
             sudoku->grid[pos.r * sudoku->len + pos.c] = num;
 
@@ -176,7 +184,6 @@ int serial_backtrack(Sudoku* sudoku) {
 
             if (serial_backtrack(sudoku))
                 return 1;
-
 
             // Backtrack
             sudoku->grid[pos.r * sudoku->len + pos.c] = 0;

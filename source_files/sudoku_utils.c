@@ -1,3 +1,10 @@
+/* --------------------------------------------------------
+ * File:        sudoku_utils.c
+ * Author:      Carl Löfkvist
+ * Date:        2025-07-13
+ * Description: Definition of utility functions used by both solvers
+ * -------------------------------------------------------- */
+
 #include "../headers/sudoku_types.h"
 #include <string.h>
 #include <stdint.h>
@@ -5,9 +12,12 @@
 /* Forward declaration for static functions */
 static void populate_grid(Sudoku* sudoku, char *grid_filename);
 
+
 /**
-* Finds the first empty cell in the Sudoku grid
-*/
+ * Finds the first empty cell in the Sudoku grid.
+ * Returns coord_t with .found = 1 if a cell is found,
+ * otherwise .found = 0 if grid is completely filled.
+ */
 coord_t first_empty_cell(Sudoku* sudoku) {
     coord_t pos = {0, 0, 0};
     uint8_t len = sudoku->len;
@@ -28,8 +38,10 @@ coord_t first_empty_cell(Sudoku* sudoku) {
     return pos;
 }
 
+
 /**
- * Checks if placing a number in a specific cell is valid according to Sudoku rules
+ * Checks if placing a number in a specific cell
+ * is valid according to Sudoku rules.
  */
 uint8_t is_valid_placement(Sudoku* sudoku, uint8_t r, uint8_t c, uint8_t num) {
     unsigned long long bit = 1ULL << (num - 1);
@@ -37,15 +49,15 @@ uint8_t is_valid_placement(Sudoku* sudoku, uint8_t r, uint8_t c, uint8_t num) {
 
     // If bit is set in any constraint, placement is invalid
     return !((sudoku->row_bits[r] | sudoku->col_bits[c] | sudoku->box_bits[box]) & bit);
-
 }
 
+
 /**
- * Creates a deep copy of a Sudoku structure including grid and bitmasks
+ * Creates a deep copy of a Sudoku structure
+ * including grid data and bitmasks.
  */
 Sudoku* deep_copy_sudoku(Sudoku* parent) {
     Sudoku* child = malloc(sizeof(Sudoku));
-
     if (!child) {
         return NULL;
     }
@@ -57,28 +69,25 @@ Sudoku* deep_copy_sudoku(Sudoku* parent) {
     // Allocate grid memory
     int grid_size = len * len * sizeof(uint8_t);
     child->grid = malloc(grid_size);
-
     if (!child->grid) {
         free(child);
         return NULL;
     }
 
-    // Fast copy all cells at once
     memcpy(child->grid, parent->grid, grid_size);
 
-    // One memory allocation for bitmasks
+    // Allocate bitmasks in one block
     child->row_bits = malloc(3 * len * sizeof(unsigned long long));
     child->col_bits = child->row_bits + len;
     child->box_bits = child->row_bits + 2 * len;
 
     if (!child->row_bits) {
         free(child->grid);
-        free(child->row_bits);
         free(child);
         return NULL;
     }
 
-    // Copy bitmasks
+    // Copy bitmask data
     memcpy(child->row_bits, parent->row_bits, len * sizeof(unsigned long long));
     memcpy(child->col_bits, parent->col_bits, len * sizeof(unsigned long long));
     memcpy(child->box_bits, parent->box_bits, len * sizeof(unsigned long long));
@@ -86,49 +95,48 @@ Sudoku* deep_copy_sudoku(Sudoku* parent) {
     return child;
 }
 
+
 /**
- * Initializes a new Sudoku puzzle with given base size and loads puzzle data
+ * Initializes a new Sudoku puzzle of given base size,
+ * and loads puzzle data from file.
  */
 Sudoku* init_sudoku(uint8_t N, char *grid_filename) {
     Sudoku* sudoku = malloc(sizeof(Sudoku));
-
     if (!sudoku)
         return NULL;
 
     sudoku->base = N;
     sudoku->len = N * N;
-    uint8_t len = N * N;
+    uint8_t len = sudoku->len;
 
-    // Allocate grid
+    // Allocate memory for grid
     sudoku->grid = malloc(len * len * sizeof(uint8_t));
-
     if (!sudoku->grid) {
         free(sudoku);
         return NULL;
     }
 
-    // One memory allocation for bitmasks
+    // Allocate one block for bitmasks
     sudoku->row_bits = calloc(3 * len, sizeof(unsigned long long));
     sudoku->col_bits = sudoku->row_bits + len;
     sudoku->box_bits = sudoku->row_bits + 2 * len;
 
     if (!sudoku->row_bits) {
         free(sudoku->grid);
-        free(sudoku->row_bits);
         free(sudoku);
         return NULL;
     }
 
+    // Load grid from file
     populate_grid(sudoku, grid_filename);
 
-    // Initialize bit arrays based on initial grid values
+    // Initialize bitmasks based on initial grid
     uint8_t r, c, val, box;
     unsigned long long bit;
 
     for (r = 0; r < len; r++) {
         for (c = 0; c < len; c++) {
             val = sudoku->grid[r * len + c];
-
             if (val > 0) {
                 bit = 1ULL << (val - 1);
                 sudoku->row_bits[r] |= bit;
@@ -142,8 +150,9 @@ Sudoku* init_sudoku(uint8_t N, char *grid_filename) {
     return sudoku;
 }
 
+
 /**
- * Frees all memory allocated for a Sudoku structure
+ * Frees all memory allocated for a Sudoku structure.
  */
 void free_sudoku(Sudoku* sudoku) {
     free(sudoku->grid);
@@ -151,15 +160,17 @@ void free_sudoku(Sudoku* sudoku) {
     free(sudoku);
 }
 
+
 /**
- * Loads puzzle data from a binary file into the Sudoku grid
+ * Loads puzzle data from a binary file into the Sudoku grid.
+ * Expects grid_filename to be a format string for snprintf,
+ * e.g. "./grids/sudoku_%dx%d.bin"
  */
 static void populate_grid(Sudoku* sudoku, char *grid_filename) {
     char filename[40];
     uint8_t len = sudoku->len;
     uint8_t* grid = sudoku->grid;
 
-    // Assuming placed in ./grids directory
     snprintf(filename, sizeof(filename), grid_filename, len, len);
     FILE* file = fopen(filename, "rb");
 
@@ -168,12 +179,11 @@ static void populate_grid(Sudoku* sudoku, char *grid_filename) {
         exit(EXIT_FAILURE);
     }
 
-    // Skip first two bytes (already known)
+    // Skip first two bytes (dimensions already known)
     fseek(file, 2, SEEK_SET);
 
-    // Read data from the binary file
-    unsigned char* data = malloc(len * len);  // Buffer for faster reading
-
+    // Read grid data
+    unsigned char* data = malloc(len * len);
     if (!data) {
         fclose(file);
         exit(EXIT_FAILURE);
@@ -185,18 +195,17 @@ static void populate_grid(Sudoku* sudoku, char *grid_filename) {
     }
 
     fclose(file);
-    int i;
 
-    for (i = 0; i < len * len; i++) {
+    for (int i = 0; i < len * len; i++) {
         grid[i] = (uint8_t)data[i];
     }
 
-    // Close the file
     free(data);
 }
 
+
 /**
- * Prints the current state of the Sudoku grid to the console
+ * Prints the current state of the Sudoku grid to console.
  */
 void print_sudoku(Sudoku* sudoku) {
     uint8_t len = sudoku->len;
@@ -206,43 +215,36 @@ void print_sudoku(Sudoku* sudoku) {
         for (j = 0; j < len; j++) {
             printf("%2d ", sudoku->grid[i * len + j]);
         }
-
         printf("\n");
     }
 }
 
+
 /**
- * Sets a value in a cell and updates all corresponding bitmasks
+ * Sets a value in a cell and updates the corresponding bitmasks.
  */
 void set_cell(Sudoku* sudoku, uint8_t row, uint8_t col, uint8_t num) {
-    // Set the value in the grid
     sudoku->grid[row * sudoku->len + col] = num;
 
-    // Create bitmask with a 1 in the position for this number
     unsigned long long bit = 1ULL << (num - 1);
-
-    // Calculate box index
     uint8_t box = (row / sudoku->base) * sudoku->base + (col / sudoku->base);
 
-    // Update all three bitmasks
     sudoku->row_bits[row] |= bit;
     sudoku->col_bits[col] |= bit;
     sudoku->box_bits[box] |= bit;
 }
 
+
 /**
- * Clears a cell's value and updates all corresponding bitmasks
+ * Clears a cell's value and updates the corresponding bitmasks.
  */
 void clear_cell(Sudoku* sudoku, uint8_t row, uint8_t col) {
     uint8_t len = sudoku->len;
     uint8_t current_value = sudoku->grid[row * len + col];
 
     unsigned long long bit = 1ULL << (current_value - 1);
-
-    // Calculate box index
     uint8_t box = (row / sudoku->base) * sudoku->base + (col / sudoku->base);
 
-    // Clear the bits in all three bitmasks
     sudoku->row_bits[row] &= ~bit;
     sudoku->col_bits[col] &= ~bit;
     sudoku->box_bits[box] &= ~bit;
@@ -252,19 +254,19 @@ void clear_cell(Sudoku* sudoku, uint8_t row, uint8_t col) {
 
 
 /**
- * Checks if a completed Sudoku puzzle is valid
- * Returns 1 if valid, 0 if invalid
+ * Checks whether a completed Sudoku puzzle is valid.
+ * Returns 1 if valid, 0 otherwise.
  */
 uint8_t is_valid_sudoku(Sudoku* sudoku) {
     size_t i, j;
     uint8_t len = sudoku->len;
     uint8_t base = sudoku->base;
 
-    // Check if all cells are filled (no zeros)
+    // Check if all cells are filled
     for (i = 0; i < len; i++) {
         for (j = 0; j < len; j++) {
             if (sudoku->grid[i * len + j] == 0) {
-                return 0; // Incomplete puzzle
+                return 0;
             }
         }
     }
@@ -272,15 +274,10 @@ uint8_t is_valid_sudoku(Sudoku* sudoku) {
     // Check rows
     for (i = 0; i < len; i++) {
         uint64_t used = 0;
-
         for (j = 0; j < len; j++) {
             uint8_t num = sudoku->grid[i * len + j];
             uint64_t bit = 1ULL << (num - 1);
-
-            if (used & bit) {
-                return 0; // Duplicate in row
-            }
-
+            if (used & bit) return 0;
             used |= bit;
         }
     }
@@ -288,15 +285,10 @@ uint8_t is_valid_sudoku(Sudoku* sudoku) {
     // Check columns
     for (j = 0; j < len; j++) {
         uint64_t used = 0;
-
         for (i = 0; i < len; i++) {
             uint8_t num = sudoku->grid[i * len + j];
             uint64_t bit = 1ULL << (num - 1);
-
-            if (used & bit) {
-                return 0; // Duplicate in column
-            }
-
+            if (used & bit) return 0;
             used |= bit;
         }
     }
@@ -305,22 +297,16 @@ uint8_t is_valid_sudoku(Sudoku* sudoku) {
     for (i = 0; i < len; i += base) {
         for (j = 0; j < len; j += base) {
             uint64_t used = 0;
-
-            // Check each cell in the box
             for (size_t r = 0; r < base; r++) {
                 for (size_t c = 0; c < base; c++) {
                     uint8_t num = sudoku->grid[(i + r) * len + (j + c)];
                     uint64_t bit = 1ULL << (num - 1);
-
-                    if (used & bit) {
-                        return 0; // Duplicate in box
-                    }
-
+                    if (used & bit) return 0;
                     used |= bit;
                 }
             }
         }
     }
 
-    return 1; // Sudoku is valid
+    return 1;
 }
